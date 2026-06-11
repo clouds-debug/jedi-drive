@@ -2,6 +2,7 @@ export type Question = {
   id: string;
   topicId: string;
   text: string;
+  image?: string;
   options: string[];
   correctIndex: number;
   explanation: string;
@@ -30,6 +31,7 @@ export const questions: Question[] = [
     id: "b-001",
     topicId: "signs",
     text: "Что обозначает знак «Уступите дорогу»?",
+    image: "/tickets/yield-sign.svg",
     options: [
       "Запрещается дальнейшее движение",
       "Водитель обязан уступить дорогу транспорту, движущемуся по пересекаемой дороге",
@@ -52,6 +54,7 @@ export const questions: Question[] = [
     id: "b-003",
     topicId: "intersections",
     text: "Вы подъезжаете к нерегулируемому перекрёстку равнозначных дорог. Кому вы обязаны уступить?",
+    image: "/tickets/intersection-equal.svg",
     options: [
       "Транспортным средствам, приближающимся справа",
       "Транспортным средствам, приближающимся слева",
@@ -65,6 +68,7 @@ export const questions: Question[] = [
     id: "b-004",
     topicId: "lights",
     text: "Что означает мигающий жёлтый сигнал светофора?",
+    image: "/tickets/flashing-yellow.svg",
     options: [
       "Запрещает движение",
       "Разрешает движение и информирует о наличии нерегулируемого перекрёстка",

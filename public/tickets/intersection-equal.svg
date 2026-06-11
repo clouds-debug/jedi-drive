@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 240">
+  <defs>
+    <linearGradient id="bg2" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#1A2150"/>
+      <stop offset="100%" stop-color="#0F1430"/>
+    </linearGradient>
+  </defs>
+  <rect width="400" height="240" fill="url(#bg2)"/>
+  <rect x="0" y="90" width="400" height="60" fill="#2A3147"/>
+  <rect x="170" y="0" width="60" height="240" fill="#2A3147"/>
+  <line x1="0" y1="120" x2="170" y2="120" stroke="#FFFFFF" stroke-width="2" stroke-dasharray="14,10" opacity="0.6"/>
+  <line x1="230" y1="120" x2="400" y2="120" stroke="#FFFFFF" stroke-width="2" stroke-dasharray="14,10" opacity="0.6"/>
+  <line x1="200" y1="0" x2="200" y2="90" stroke="#FFFFFF" stroke-width="2" stroke-dasharray="14,10" opacity="0.6"/>
+  <line x1="200" y1="150" x2="200" y2="240" stroke="#FFFFFF" stroke-width="2" stroke-dasharray="14,10" opacity="0.6"/>
+  <rect x="60" y="105" width="36" height="20" rx="3" fill="#F97316"/>
+  <rect x="64" y="108" width="6" height="14" fill="#FDBA74"/>
+  <text x="78" y="120" fill="#FFFFFF" font-family="sans-serif" font-size="11" font-weight="bold">A</text>
+  <rect x="255" y="115" width="36" height="20" rx="3" fill="#22C55E"/>
+  <rect x="285" y="118" width="6" height="14" fill="#86EFAC"/>
+  <text x="265" y="130" fill="#FFFFFF" font-family="sans-serif" font-size="11" font-weight="bold">B</text>
+  <polygon points="105,115 112,108 112,122" fill="#F97316"/>
+  <polygon points="252,125 245,118 245,132" fill="#22C55E"/>
+</svg>

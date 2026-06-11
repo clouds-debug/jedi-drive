@@ -76,6 +76,16 @@ export function Quiz({ questions, mode, topic }: QuizProps) {
           )}
         </div>
 
+        {current.image && (
+          <div className="relative mb-5 rounded-xl overflow-hidden border border-white/10 bg-[#0F1430]">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={current.image}
+              alt="Иллюстрация к вопросу"
+              className="w-full max-h-[280px] object-contain"
+            />
+          </div>
+        )}
         <h2 className="relative text-[18px] sm:text-[20px] font-medium text-white leading-snug mb-6">
           {current.text}
         </h2>
@@ -242,6 +252,17 @@ function QuizResults({
                 </span>
                 <h3 className="text-[15px] text-white leading-snug pt-0.5">{q.text}</h3>
               </div>
+
+              {q.image && (
+                <div className="ml-10 mb-4 rounded-lg overflow-hidden border border-white/10 bg-[#0F1430] max-w-[420px]">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={q.image}
+                    alt="Иллюстрация к вопросу"
+                    className="w-full max-h-[220px] object-contain"
+                  />
+                </div>
+              )}
 
               <div className="space-y-1.5 mb-4 pl-10">
                 {q.options.map((opt, oi) => {
