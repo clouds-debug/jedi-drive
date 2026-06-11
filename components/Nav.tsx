@@ -20,37 +20,48 @@ export function Nav() {
                 <path d="M2 4 L6 8 L10 4" fill="none" stroke="currentColor" strokeWidth="1.5" />
               </svg>
             </button>
-            <div className="absolute left-[-12px] top-[calc(100%+14px)] min-w-[230px] bg-white text-ink rounded-xl p-2 shadow-[0_10px_28px_rgba(10,12,30,0.35)] opacity-0 invisible group-hover:opacity-100 group-hover:visible group-focus-within:opacity-100 group-focus-within:visible transition-all z-50">
+            <div className="absolute left-[-14px] top-[calc(100%+14px)] min-w-[268px] bg-navy border border-white/10 rounded-xl p-2 shadow-[0_18px_50px_rgba(0,0,0,0.55)] opacity-0 invisible translate-y-[-6px] group-hover:opacity-100 group-hover:visible group-hover:translate-y-0 group-focus-within:opacity-100 group-focus-within:visible group-focus-within:translate-y-0 transition-all duration-200 z-50 overflow-hidden">
+              <div className="absolute -right-12 -top-12 w-44 h-44 bg-orange/[0.15] rounded-full blur-[60px] pointer-events-none" aria-hidden />
+
               <Link
                 href="/services/theory"
-                className="flex items-center gap-3 p-2.5 rounded-lg bg-indigo-bg hover:bg-indigo-bg/80"
+                className="relative flex items-center gap-3 p-3 rounded-lg hover:bg-white/[0.05] transition-colors"
               >
-                <span className="w-8 h-8 bg-navy rounded-lg grid place-items-center shrink-0">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#F97316" strokeWidth="1.6">
+                <span className="w-9 h-9 bg-orange/15 rounded-lg grid place-items-center shrink-0">
+                  <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#FDBA74" strokeWidth="1.7">
                     <path d="M4 4h12a3 3 0 0 1 3 3v13H7a3 3 0 0 1-3-3V4z" />
                     <path d="M4 17a3 3 0 0 1 3-3h12" />
                   </svg>
                 </span>
-                <span>
-                  <span className="block text-[13px] font-medium text-navy">Запись на теорию</span>
-                  <span className="block text-[11px] text-ink-mute">Группы и индивидуально</span>
+                <span className="flex-1">
+                  <span className="block text-[13.5px] font-medium text-white">Запись на теорию</span>
+                  <span className="block text-[11.5px] text-muted-on-navy">Группы и индивидуально</span>
                 </span>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#A5B4D8" strokeWidth="2" className="opacity-0 group-hover:opacity-60 transition-opacity">
+                  <path d="M9 6l6 6-6 6" />
+                </svg>
               </Link>
+
+              <div className="h-px bg-white/[0.06] my-0.5" />
+
               <Link
                 href="/services/practice"
-                className="flex items-center gap-3 p-2.5 rounded-lg hover:bg-indigo-bg"
+                className="relative flex items-center gap-3 p-3 rounded-lg hover:bg-white/[0.05] transition-colors"
               >
-                <span className="w-8 h-8 bg-indigo-bg rounded-lg grid place-items-center shrink-0">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#141A3D" strokeWidth="1.6">
+                <span className="w-9 h-9 bg-orange/15 rounded-lg grid place-items-center shrink-0">
+                  <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#FDBA74" strokeWidth="1.7">
                     <circle cx="12" cy="12" r="8" />
                     <circle cx="12" cy="12" r="3" />
                     <path d="M12 4v4M12 16v4M4 12h4M16 12h4" />
                   </svg>
                 </span>
-                <span>
-                  <span className="block text-[13px] font-medium text-navy">Запись на практику</span>
-                  <span className="block text-[11px] text-ink-mute">Город и автодром</span>
+                <span className="flex-1">
+                  <span className="block text-[13.5px] font-medium text-white">Запись на практику</span>
+                  <span className="block text-[11.5px] text-muted-on-navy">Город и автодром</span>
                 </span>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#A5B4D8" strokeWidth="2" className="opacity-0 group-hover:opacity-60 transition-opacity">
+                  <path d="M9 6l6 6-6 6" />
+                </svg>
               </Link>
             </div>
           </div>
