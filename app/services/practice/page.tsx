@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { Nav } from "@/components/Nav";
 import { Footer } from "@/components/Footer";
 import { Reveal } from "@/components/Reveal";
-import { SectionLabel } from "@/components/SectionLabel";
 import { PracticeFeatures } from "@/components/practice/PracticeFeatures";
 import { PracticePricing } from "@/components/practice/PracticePricing";
 import { InstructorsPreview } from "@/components/practice/InstructorsPreview";
@@ -24,7 +23,9 @@ export default function PracticePage() {
 
           <div className="mx-auto max-w-7xl px-6 lg:px-10 relative">
             <Reveal>
-              <SectionLabel num="00">Запись на практику · категория B</SectionLabel>
+              <p className="hero-rise text-[12px] text-orange-soft tracking-[0.1em] uppercase mb-4">
+                Практика · категория B
+              </p>
               <h1 className="hero-rise text-[32px] sm:text-[44px] lg:text-[52px] font-medium text-white tracking-[-0.02em] leading-[1.05] mb-4 max-w-[680px]">
                 Сядь за руль с <span className="text-orange">инструктором</span>
               </h1>

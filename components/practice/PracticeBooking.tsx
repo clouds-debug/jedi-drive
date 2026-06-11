@@ -28,6 +28,8 @@ const dayDates = [
   "8 апр", "9 апр", "10 апр", "11 апр", "12 апр", "13 апр", "14 апр",
 ];
 
+const weekLabels = ["18–24 мар", "25–31 мар", "1–7 апр", "8–14 апр"];
+
 const langOptions: { value: "ru" | "ge" | "en" | null; label: string }[] = [
   { value: null, label: "Все" },
   { value: "ru", label: "ru" },
@@ -55,9 +57,23 @@ export function PracticeBooking() {
   );
 
   function selectInstructor(id: string) {
+    if (selectedInstructorId === id) {
+      // Click selected → deselect
+      setSelectedInstructorId(null);
+      setSelectedTime(null);
+      setSelectedTariff(null);
+      return;
+    }
     setSelectedInstructorId(id);
     setSelectedTime(null);
+    setSelectedTariff(null);
     setSelectedDay(0);
+  }
+
+  function clearInstructor() {
+    setSelectedInstructorId(null);
+    setSelectedTime(null);
+    setSelectedTariff(null);
   }
 
   function handleSubmit(e: React.FormEvent) {
@@ -98,7 +114,11 @@ export function PracticeBooking() {
         ) : (
           <>
             <Reveal delay={100}>
-              <InstructorPicker selectedId={selectedInstructorId} onSelect={selectInstructor} />
+              <InstructorPicker
+                selectedId={selectedInstructorId}
+                onSelect={selectInstructor}
+                onClear={clearInstructor}
+              />
             </Reveal>
 
             {selectedInstructor && (
@@ -154,12 +174,15 @@ export function PracticeBooking() {
 function InstructorPicker({
   selectedId,
   onSelect,
+  onClear,
 }: {
   selectedId: string | null;
   onSelect: (id: string) => void;
+  onClear: () => void;
 }) {
   const [search, setSearch] = useState("");
   const [langFilter, setLangFilter] = useState<"ru" | "ge" | "en" | null>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
 
   const filtered = useMemo(() => {
     return instructors.filter((inst) => {
@@ -169,12 +192,31 @@ function InstructorPicker({
     });
   }, [search, langFilter]);
 
+  function scroll(dir: "left" | "right") {
+    const el = scrollRef.current;
+    if (!el) return;
+    el.scrollBy({ left: dir === "left" ? -280 : 280, behavior: "smooth" });
+  }
+
   return (
     <div>
       <div className="flex items-center justify-between gap-4 mb-3">
         <div className="text-[11px] text-muted-on-navy tracking-[0.16em] uppercase">Шаг 1 · Инструктор</div>
-        <div className="text-[11.5px] text-muted-on-navy">
-          {filtered.length} из {instructors.length}
+        <div className="flex items-center gap-3">
+          {selectedId && (
+            <button
+              onClick={onClear}
+              className="inline-flex items-center gap-1.5 text-[11.5px] text-muted-on-navy hover:text-white transition-colors"
+            >
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
+                <path d="M6 6l12 12M6 18L18 6" />
+              </svg>
+              Сбросить
+            </button>
+          )}
+          <div className="text-[11.5px] text-muted-on-navy">
+            {filtered.length} из {instructors.length}
+          </div>
         </div>
       </div>
 
@@ -225,53 +267,82 @@ function InstructorPicker({
           <p className="text-[12.5px] text-muted-on-navy">Попробуй другой запрос или сбрось фильтр языка.</p>
         </div>
       ) : (
-        <div className="overflow-x-auto scroll-smooth snap-x snap-mandatory -mx-6 px-6 lg:-mx-10 lg:px-10 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-          <div className="flex gap-3">
-            {filtered.map((inst) => {
-              const isSelected = inst.id === selectedId;
-              return (
-                <button
-                  key={inst.id}
-                  onClick={() => onSelect(inst.id)}
-                  className={`snap-start shrink-0 w-[260px] flex items-center gap-3.5 p-4 rounded-xl border transition-all duration-300 ${
-                    isSelected
-                      ? "bg-white/[0.06] border-orange/50 shadow-[0_8px_24px_-12px_rgba(249,115,22,0.4)]"
-                      : "bg-white/[0.03] border-white/10 hover:bg-white/[0.05] hover:border-white/20"
-                  }`}
-                >
-                  <span
-                    className={`shrink-0 w-12 h-12 rounded-full grid place-items-center text-[14px] font-medium ${
-                      avatarColors[inst.avatarColor]
+        <div className="flex items-stretch gap-2 sm:gap-3">
+          {filtered.length > 3 && (
+            <button
+              onClick={() => scroll("left")}
+              aria-label="Назад"
+              className="shrink-0 self-center w-10 h-10 rounded-full bg-white/[0.04] border border-white/15 text-white grid place-items-center hover:bg-white/[0.08] hover:border-white/30 hover:text-orange-soft active:scale-95 transition-all"
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M15 6l-6 6 6 6" />
+              </svg>
+            </button>
+          )}
+
+          <div
+            ref={scrollRef}
+            className="flex-1 min-w-0 overflow-x-auto scroll-smooth snap-x snap-mandatory pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+          >
+            <div className="flex gap-3">
+              {filtered.map((inst) => {
+                const isSelected = inst.id === selectedId;
+                return (
+                  <button
+                    key={inst.id}
+                    onClick={() => onSelect(inst.id)}
+                    className={`snap-start shrink-0 w-[260px] flex items-center gap-3.5 p-4 rounded-xl border transition-all duration-300 ${
+                      isSelected
+                        ? "bg-white/[0.06] border-orange/50 shadow-[0_8px_24px_-12px_rgba(249,115,22,0.4)]"
+                        : "bg-white/[0.03] border-white/10 hover:bg-white/[0.05] hover:border-white/20"
                     }`}
                   >
-                    {inst.initials}
-                  </span>
-                  <div className="text-left flex-1 min-w-0">
-                    <div className="text-[13.5px] font-medium text-white truncate">
-                      {inst.name.split(" ")[0]} {inst.name.split(" ")[1]?.[0]}.
-                    </div>
-                    <div className="flex items-center gap-1.5 mt-0.5">
-                      <svg width="11" height="11" viewBox="0 0 24 24" fill="#F97316" aria-hidden>
-                        <path d="M12 2l3 7 7 .8-5.3 5 1.6 7L12 18.3 5.7 22l1.6-7L2 9.8l7-.8z" />
-                      </svg>
-                      <span className="text-[12px] text-white">{inst.rating}</span>
-                      <span className="text-[11px] text-muted-on-navy">· {inst.reviewsCount}</span>
-                    </div>
-                    <div className="text-[10px] text-muted-on-navy/80 tracking-[0.16em] uppercase mt-1">
-                      {inst.languages.join(" · ")}
-                    </div>
-                  </div>
-                  {isSelected && (
-                    <span className="shrink-0 w-5 h-5 rounded-full bg-orange grid place-items-center">
-                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" strokeWidth="3" aria-hidden>
-                        <path d="M5 12l5 5L20 6" />
-                      </svg>
+                    <span
+                      className={`shrink-0 w-12 h-12 rounded-full grid place-items-center text-[14px] font-medium ${
+                        avatarColors[inst.avatarColor]
+                      }`}
+                    >
+                      {inst.initials}
                     </span>
-                  )}
-                </button>
-              );
-            })}
+                    <div className="text-left flex-1 min-w-0">
+                      <div className="text-[13.5px] font-medium text-white truncate">
+                        {inst.name.split(" ")[0]} {inst.name.split(" ")[1]?.[0]}.
+                      </div>
+                      <div className="flex items-center gap-1.5 mt-0.5">
+                        <svg width="11" height="11" viewBox="0 0 24 24" fill="#F97316" aria-hidden>
+                          <path d="M12 2l3 7 7 .8-5.3 5 1.6 7L12 18.3 5.7 22l1.6-7L2 9.8l7-.8z" />
+                        </svg>
+                        <span className="text-[12px] text-white">{inst.rating}</span>
+                        <span className="text-[11px] text-muted-on-navy">· {inst.reviewsCount}</span>
+                      </div>
+                      <div className="text-[10px] text-muted-on-navy/80 tracking-[0.16em] uppercase mt-1">
+                        {inst.languages.join(" · ")}
+                      </div>
+                    </div>
+                    {isSelected && (
+                      <span className="shrink-0 w-5 h-5 rounded-full bg-orange grid place-items-center">
+                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" strokeWidth="3" aria-hidden>
+                          <path d="M5 12l5 5L20 6" />
+                        </svg>
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
           </div>
+
+          {filtered.length > 3 && (
+            <button
+              onClick={() => scroll("right")}
+              aria-label="Вперёд"
+              className="shrink-0 self-center w-10 h-10 rounded-full bg-white/[0.04] border border-white/15 text-white grid place-items-center hover:bg-white/[0.08] hover:border-white/30 hover:text-orange-soft active:scale-95 transition-all"
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M9 6l6 6-6 6" />
+              </svg>
+            </button>
+          )}
         </div>
       )}
     </div>
@@ -293,12 +364,19 @@ function Calendar({
   selectedTime: string | null;
   onSelectTime: (t: string) => void;
 }) {
-  const scrollRef = useRef<HTMLDivElement>(null);
+  const [view, setView] = useState<"week" | "month">("week");
+  const [weekIndex, setWeekIndex] = useState(Math.floor(selectedDay / 7));
 
-  function scrollWeek(dir: "left" | "right") {
-    const el = scrollRef.current;
-    if (!el) return;
-    el.scrollBy({ left: dir === "left" ? -280 : 280, behavior: "smooth" });
+  const weekStart = weekIndex * 7;
+  const weekDays = Array.from({ length: 7 }, (_, i) => weekStart + i);
+
+  const canPrev = weekIndex > 0;
+  const canNext = weekIndex < 3;
+
+  function selectDayFromMonth(dayIdx: number) {
+    onSelectDay(dayIdx);
+    setWeekIndex(Math.floor(dayIdx / 7));
+    setView("week");
   }
 
   return (
@@ -324,56 +402,115 @@ function Calendar({
           </div>
         </div>
 
-        <div className="flex items-center justify-between mb-2.5">
-          <div className="text-[11.5px] text-muted-on-navy tracking-[0.08em]">
-            Доступные дни на {dayLabels.length / 7} недели
-          </div>
-          <div className="flex gap-1.5">
+        <div className="flex items-center justify-between gap-3 mb-4 flex-wrap">
+          <div className="inline-flex gap-1 bg-white/[0.04] border border-white/10 rounded-lg p-1">
             <button
-              onClick={() => scrollWeek("left")}
-              aria-label="Назад на неделю"
-              className="w-8 h-8 rounded-lg bg-white/[0.04] border border-white/10 text-white grid place-items-center hover:bg-white/[0.08] hover:border-white/20 transition-all"
+              onClick={() => setView("week")}
+              className={`px-3.5 py-1.5 rounded-md text-[12px] font-medium transition-all ${
+                view === "week" ? "bg-orange text-white" : "text-muted-on-navy hover:text-white"
+              }`}
             >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M15 6l-6 6 6 6" />
-              </svg>
+              Неделя
             </button>
             <button
-              onClick={() => scrollWeek("right")}
-              aria-label="Вперёд на неделю"
-              className="w-8 h-8 rounded-lg bg-white/[0.04] border border-white/10 text-white grid place-items-center hover:bg-white/[0.08] hover:border-white/20 transition-all"
+              onClick={() => setView("month")}
+              className={`px-3.5 py-1.5 rounded-md text-[12px] font-medium transition-all ${
+                view === "month" ? "bg-orange text-white" : "text-muted-on-navy hover:text-white"
+              }`}
             >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M9 6l6 6-6 6" />
-              </svg>
+              Месяц
             </button>
           </div>
+
+          {view === "week" && (
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => canPrev && setWeekIndex(weekIndex - 1)}
+                disabled={!canPrev}
+                aria-label="Прошлая неделя"
+                className="w-8 h-8 rounded-lg bg-white/[0.04] border border-white/10 text-white grid place-items-center hover:bg-white/[0.08] hover:border-white/20 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M15 6l-6 6 6 6" />
+                </svg>
+              </button>
+              <span className="text-[12px] text-white min-w-[90px] text-center tabular-nums">
+                {weekLabels[weekIndex]}
+              </span>
+              <button
+                onClick={() => canNext && setWeekIndex(weekIndex + 1)}
+                disabled={!canNext}
+                aria-label="Следующая неделя"
+                className="w-8 h-8 rounded-lg bg-white/[0.04] border border-white/10 text-white grid place-items-center hover:bg-white/[0.08] hover:border-white/20 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M9 6l6 6-6 6" />
+                </svg>
+              </button>
+            </div>
+          )}
         </div>
 
-        <div
-          ref={scrollRef}
-          className="flex gap-1.5 overflow-x-auto scroll-smooth -mx-1 px-1 mb-5 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-        >
-          {dayLabels.map((label, i) => {
-            const isSelected = selectedDay === i;
-            return (
-              <button
-                key={i}
-                onClick={() => onSelectDay(i)}
-                className={`shrink-0 min-w-[64px] px-3 py-2.5 rounded-lg text-center transition-all ${
-                  isSelected
-                    ? "bg-orange text-white"
-                    : "bg-white/[0.04] border border-white/10 text-muted-on-navy hover:bg-white/[0.07] hover:text-white"
-                }`}
-              >
-                <div className="text-[11.5px] font-medium leading-tight">{label}</div>
-                <div className={`text-[10.5px] mt-0.5 ${isSelected ? "text-white/80" : "text-muted-on-navy/70"}`}>
-                  {dayDates[i]}
-                </div>
-              </button>
-            );
-          })}
-        </div>
+        {view === "week" ? (
+          <div className="grid grid-cols-7 gap-1.5 mb-5">
+            {weekDays.map((i) => {
+              const isSelected = selectedDay === i;
+              return (
+                <button
+                  key={i}
+                  onClick={() => onSelectDay(i)}
+                  className={`px-2 py-2.5 rounded-lg text-center transition-all ${
+                    isSelected
+                      ? "bg-orange text-white"
+                      : "bg-white/[0.04] border border-white/10 text-muted-on-navy hover:bg-white/[0.07] hover:text-white"
+                  }`}
+                >
+                  <div className="text-[11.5px] font-medium leading-tight">{dayLabels[i]}</div>
+                  <div className={`text-[10.5px] mt-0.5 ${isSelected ? "text-white/80" : "text-muted-on-navy/70"}`}>
+                    {dayDates[i]}
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        ) : (
+          <div className="mb-5">
+            <div className="grid grid-cols-7 gap-1.5 mb-2 text-[10.5px] text-muted-on-navy/70 tracking-[0.1em] uppercase text-center">
+              <div>Пн</div>
+              <div>Вт</div>
+              <div>Ср</div>
+              <div>Чт</div>
+              <div>Пт</div>
+              <div>Сб</div>
+              <div>Вс</div>
+            </div>
+            <div className="grid grid-cols-7 gap-1.5">
+              {Array.from({ length: 28 }, (_, i) => {
+                const isSelected = selectedDay === i;
+                return (
+                  <button
+                    key={i}
+                    onClick={() => selectDayFromMonth(i)}
+                    className={`aspect-square rounded-lg text-center grid place-items-center transition-all ${
+                      isSelected
+                        ? "bg-orange text-white"
+                        : "bg-white/[0.04] border border-white/10 text-white hover:bg-white/[0.08] hover:border-white/20"
+                    }`}
+                  >
+                    <div>
+                      <div className="text-[13px] font-medium leading-tight">
+                        {dayDates[i].split(" ")[0]}
+                      </div>
+                      <div className={`text-[9px] mt-0.5 ${isSelected ? "text-white/70" : "text-muted-on-navy/60"} tracking-[0.05em] uppercase`}>
+                        {dayDates[i].split(" ")[1]}
+                      </div>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
 
         <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
           {slots.map((slot) => {
