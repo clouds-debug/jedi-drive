@@ -1,0 +1,54 @@
+@import "tailwindcss";
+
+@theme {
+  --color-navy: #141A3D;
+  --color-navy-elev: #181F47;
+  --color-navy-deep: #0F1430;
+  --color-navy-deepest: #0A0E24;
+  --color-orange: #F97316;
+  --color-orange-soft: #FDBA74;
+  --color-orange-bg: #FFF7ED;
+  --color-indigo-bg: #EEF0F8;
+  --color-muted-on-navy: #A5B4D8;
+  --color-ink: #141A3D;
+  --color-ink-soft: #4B5563;
+  --color-ink-mute: #6B7280;
+  --color-line: #E5E7EB;
+  --color-surface-soft: #F8FAFC;
+
+  --font-sans: var(--font-manrope), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+
+  --radius-card: 14px;
+  --radius-btn: 8px;
+  --radius-chip: 9px;
+}
+
+html, body {
+  background: var(--color-navy);
+  color: #ffffff;
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+@keyframes hero-rise {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.hero-rise {
+  animation: hero-rise 800ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-rise {
+    animation: none;
+  }
+  * {
+    transition-duration: 0ms !important;
+  }
+}
