@@ -6,6 +6,7 @@ import { SectionLabel } from "@/components/SectionLabel";
 import { StreamsCarousel } from "@/components/StreamsCarousel";
 import { TheoryProgram } from "@/components/TheoryProgram";
 import { TheoryFormat } from "@/components/TheoryFormat";
+import { TheoryPricing } from "@/components/TheoryPricing";
 import { TheoryEnroll } from "@/components/TheoryEnroll";
 
 export const metadata: Metadata = {
@@ -44,6 +45,7 @@ export default function TheoryPage() {
 
         <TheoryProgram />
         <TheoryFormat />
+        <TheoryPricing />
         <TheoryEnroll />
       </main>
       <Footer />

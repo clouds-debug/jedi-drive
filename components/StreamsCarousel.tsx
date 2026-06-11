@@ -173,10 +173,9 @@ function SideCard({ stream, onClick }: { stream: Stream; onClick: () => void }) 
       <div className="text-[36px] font-medium text-white/85 leading-none tracking-tight mb-3 group-hover:text-white transition-colors">
         №{stream.number}
       </div>
-      <div className="text-[12px] text-muted-on-navy mb-1">
+      <div className="text-[12px] text-muted-on-navy">
         {stream.startShort} — {stream.endShort}
       </div>
-      <div className="text-[10px] text-muted-on-navy/70 uppercase tracking-[0.12em] mt-3">{stream.language}</div>
     </button>
   );
 }

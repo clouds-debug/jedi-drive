@@ -40,7 +40,7 @@ export function TheoryEnroll() {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-14">
           <div className="lg:col-span-5">
             <Reveal>
-              <SectionLabel num="04">Запись</SectionLabel>
+              <SectionLabel num="05">Запись</SectionLabel>
               <h2 className="text-[28px] sm:text-[36px] font-medium text-white tracking-[-0.015em] mb-4 max-w-[480px] leading-[1.1]">
                 Закрепи <span className="text-orange">место</span>
               </h2>
@@ -53,15 +53,15 @@ export function TheoryEnroll() {
               <ul className="space-y-3.5">
                 <li className="flex items-start gap-3 text-[13.5px] text-muted-on-navy">
                   <Check />
-                  <span>Без предоплаты — сначала пробное занятие, потом решаешь</span>
+                  <span>Подберём формат и поток под твой график</span>
                 </li>
                 <li className="flex items-start gap-3 text-[13.5px] text-muted-on-navy">
                   <Check />
-                  <span>Заявка ни к чему не обязывает</span>
+                  <span>Заявка ни к чему не обязывает — сначала расскажем подробнее</span>
                 </li>
                 <li className="flex items-start gap-3 text-[13.5px] text-muted-on-navy">
                   <Check />
-                  <span>Можно перенести поток если не подойдёт дата</span>
+                  <span>Можно перенести занятия если что-то поменялось</span>
                 </li>
               </ul>
             </Reveal>
