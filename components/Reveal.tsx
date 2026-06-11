@@ -5,13 +5,12 @@ import { useEffect, useRef, useState } from "react";
 type Props = {
   children: React.ReactNode;
   delay?: number;
-  as?: keyof React.JSX.IntrinsicElements;
   className?: string;
   y?: number;
 };
 
-export function Reveal({ children, delay = 0, as = "div", className = "", y = 24 }: Props) {
-  const ref = useRef<HTMLElement>(null);
+export function Reveal({ children, delay = 0, className = "", y = 24 }: Props) {
+  const ref = useRef<HTMLDivElement>(null);
   const [shown, setShown] = useState(false);
 
   useEffect(() => {
@@ -36,11 +35,8 @@ export function Reveal({ children, delay = 0, as = "div", className = "", y = 24
     return () => obs.disconnect();
   }, []);
 
-  const Tag = as as keyof React.JSX.IntrinsicElements;
-
   return (
-    // @ts-expect-error — generic ref + dynamic tag
-    <Tag
+    <div
       ref={ref}
       style={{
         transitionDelay: `${delay}ms`,
@@ -50,6 +46,6 @@ export function Reveal({ children, delay = 0, as = "div", className = "", y = 24
       className={`transition-all duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] ${className}`}
     >
       {children}
-    </Tag>
+    </div>
   );
 }
