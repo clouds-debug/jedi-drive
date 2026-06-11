@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Reveal } from "./Reveal";
 import { SectionLabel } from "./SectionLabel";
 
@@ -23,6 +23,20 @@ export function TheoryEnroll() {
   const [format, setFormat] = useState("group");
   const [comment, setComment] = useState("");
   const [sent, setSent] = useState(false);
+
+  useEffect(() => {
+    function applyHash() {
+      const hash = window.location.hash;
+      if (!hash.includes("enroll")) return;
+      if (hash.includes("solo")) setFormat("solo");
+      else if (hash.includes("group")) setFormat("group");
+      const target = document.getElementById("enroll");
+      target?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+    applyHash();
+    window.addEventListener("hashchange", applyHash);
+    return () => window.removeEventListener("hashchange", applyHash);
+  }, []);
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();

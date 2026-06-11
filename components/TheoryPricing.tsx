@@ -10,6 +10,7 @@ type Plan = {
   perLesson: string;
   features: string[];
   cta: string;
+  ctaHref: string;
   highlight?: boolean;
   icon: React.ReactNode;
 };
@@ -31,6 +32,7 @@ const plans: Plan[] = [
       "Симулятор билетов МВД",
     ],
     cta: "Записаться в группу",
+    ctaHref: "#enroll-group",
     icon: (
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6">
         <circle cx="9" cy="9" r="3" />
@@ -54,6 +56,7 @@ const plans: Plan[] = [
       "Симулятор билетов МВД",
     ],
     cta: "Хочу индивидуально",
+    ctaHref: "#enroll-solo",
     highlight: true,
     icon: (
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6">
@@ -163,7 +166,7 @@ function PricingCard({ plan }: { plan: Plan }) {
       </ul>
 
       <a
-        href="#enroll"
+        href={plan.ctaHref}
         className={`relative block w-full text-center py-3.5 rounded-lg font-medium text-[14px] transition-all hover:translate-y-[-1px] active:scale-[0.98] ${
           plan.highlight
             ? "bg-orange hover:bg-[#EA670F] text-white"
