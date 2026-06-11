@@ -30,7 +30,7 @@ export function InstructorsPreview() {
       <div className="mx-auto max-w-7xl px-6 lg:px-10 relative">
         <div className="flex items-end justify-between gap-6 mb-10">
           <Reveal className="flex-1">
-            <SectionLabel num="03">Инструкторы</SectionLabel>
+            <SectionLabel num="01">Инструкторы</SectionLabel>
             <h2 className="text-[28px] sm:text-[34px] font-medium text-white tracking-[-0.015em] max-w-[540px]">
               С кем будешь <span className="text-orange">ездить</span>
             </h2>
@@ -77,7 +77,10 @@ export function InstructorsPreview() {
                         <path d="M12 2l3 7 7 .8-5.3 5 1.6 7L12 18.3 5.7 22l1.6-7L2 9.8l7-.8z" />
                       </svg>
                       <span className="text-[12px] text-white">{inst.rating}</span>
-                      <span className="text-[11px] text-muted-on-navy">· {inst.reviewsCount} отзывов</span>
+                      <span className="text-[11px] text-muted-on-navy">· {inst.reviewsCount}</span>
+                    </div>
+                    <div className="text-[10px] text-muted-on-navy/80 tracking-[0.16em] uppercase mt-1.5">
+                      {inst.languages.join(" · ")}
                     </div>
                   </div>
                 </Link>

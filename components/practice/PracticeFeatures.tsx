@@ -98,7 +98,7 @@ export function PracticeFeatures() {
 
       <div className="mx-auto max-w-7xl px-6 lg:px-10 relative">
         <Reveal>
-          <SectionLabel num="01">Преимущества</SectionLabel>
+          <SectionLabel num="02">Преимущества</SectionLabel>
           <h2 className="text-[28px] sm:text-[34px] font-medium text-white tracking-[-0.015em] mb-3 max-w-[540px]">
             Что входит в <span className="text-orange">практику</span>
           </h2>

@@ -5,66 +5,84 @@ type Pack = {
   badge: string;
   title: string;
   subtitle: string;
-  lessons: number;
-  hours: string;
+  lessons: string;
   price: string;
   perLesson: string;
   features: string[];
   cta: string;
   highlight?: boolean;
+  icon: React.ReactNode;
 };
+
+export const tariffOptions = [
+  { id: "platform", name: "Только площадка", price: "₾ 500", lessons: "10" },
+  { id: "combo", name: "Площадка + город", price: "₾ 1 100", lessons: "20" },
+  { id: "city", name: "Только город", price: "₾ 650", lessons: "10" },
+];
 
 const packs: Pack[] = [
   {
-    badge: "Стартовый",
-    title: "10 занятий",
-    subtitle: "Минимальный набор для уверенной сдачи, если уже немного водишь.",
-    lessons: 10,
-    hours: "15 часов",
+    badge: "Площадка",
+    title: "Только площадка",
+    subtitle: "Базовые навыки на закрытой площадке: посадка, руль, педали, упражнения для экзамена.",
+    lessons: "10 занятий по 90 минут",
+    price: "₾ 500",
+    perLesson: "₾ 50 за занятие",
+    features: [
+      "Своя площадка с новым покрытием",
+      "Экзаменационная разметка",
+      "Без выезда в город",
+      "Безопасно для совсем новичков",
+    ],
+    cta: "Записаться",
+    icon: (
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6">
+        <rect x="3" y="6" width="18" height="13" rx="1.5" />
+        <path d="M3 11h18M7 6V4M17 6V4" />
+      </svg>
+    ),
+  },
+  {
+    badge: "Полный курс",
+    title: "Площадка + город",
+    subtitle: "Стандартный путь: сначала базы на площадке, потом реальные маршруты МВД в городе.",
+    lessons: "20 занятий по 90 минут",
+    price: "₾ 1 100",
+    perLesson: "₾ 55 за занятие",
+    features: [
+      "8 занятий на площадке",
+      "12 занятий по городу",
+      "Все экзаменационные маршруты",
+      "Симуляция экзамена",
+      "Самый частый выбор учеников",
+    ],
+    cta: "Полный курс",
+    highlight: true,
+    icon: (
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6">
+        <path d="M5 13l1.5-5.5A2 2 0 018.5 6h7a2 2 0 012 1.5L19 13M3 17h18M5 13v3m14-3v3M7 17v1.5a1.5 1.5 0 003 0V17m4 0v1.5a1.5 1.5 0 003 0V17" />
+      </svg>
+    ),
+  },
+  {
+    badge: "Город",
+    title: "Только город",
+    subtitle: "Если ты уже водишь и нужны только экзаменационные маршруты и уверенность в реальных условиях.",
+    lessons: "10 занятий по 90 минут",
     price: "₾ 650",
     perLesson: "₾ 65 за занятие",
     features: [
-      "10 занятий по 90 минут",
-      "Площадка + город",
-      "Маршруты МВД",
-      "Бесплатный перенос за 12 часов",
-    ],
-    cta: "Записаться на 10",
-  },
-  {
-    badge: "Стандарт",
-    title: "20 занятий",
-    subtitle: "Самый популярный пакет — хватает чтобы привыкнуть к авто и сдать с первого раза.",
-    lessons: 20,
-    hours: "30 часов",
-    price: "₾ 1 200",
-    perLesson: "₾ 60 за занятие",
-    features: [
-      "20 занятий по 90 минут",
-      "Площадка + город + ночь",
+      "Реальные улицы Тбилиси",
       "Все экзаменационные маршруты",
-      "Симуляция экзамена",
-      "Бесплатный перенос за 12 часов",
+      "Сложные перекрёстки",
+      "Парковка в плотном потоке",
     ],
-    cta: "Записаться на 20",
-    highlight: true,
-  },
-  {
-    badge: "Полный",
-    title: "30 занятий",
-    subtitle: "Если водишь впервые. Не торопимся — отрабатываем каждый элемент до автомата.",
-    lessons: 30,
-    hours: "45 часов",
-    price: "₾ 1 700",
-    perLesson: "₾ 57 за занятие",
-    features: [
-      "30 занятий по 90 минут",
-      "Все условия и ситуации",
-      "Симуляция экзамена",
-      "Поездки в плохую погоду",
-      "Бесплатный перенос за 12 часов",
-    ],
-    cta: "Записаться на 30",
+    cta: "Записаться",
+    icon: (
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6">
+        <path d="M3 21h18M5 21V8l7-5 7 5v13M9 9h2M13 9h2M9 13h2M13 13h2M9 17h2M13 17h2" />
+      </svg>
+    ),
   },
 ];
 
@@ -76,12 +94,12 @@ export function PracticePricing() {
 
       <div className="mx-auto max-w-7xl px-6 lg:px-10 relative">
         <Reveal>
-          <SectionLabel num="02">Тарифы</SectionLabel>
+          <SectionLabel num="03">Тарифы</SectionLabel>
           <h2 className="text-[28px] sm:text-[34px] font-medium text-white tracking-[-0.015em] mb-3 max-w-[540px]">
             Три пакета на <span className="text-orange">выбор</span>
           </h2>
           <p className="text-[14px] text-muted-on-navy leading-[1.65] mb-12 max-w-[520px]">
-            Цены за занятие падают с объёмом. Также можно по одному занятию — ₾ 70 каждое.
+            Только площадка, только город или комбо. По одному занятию тоже можно — ₾ 70 / урок.
           </p>
         </Reveal>
 
@@ -122,13 +140,20 @@ function PackCard({ pack }: { pack: Pack }) {
           {pack.badge}
         </span>
         {pack.highlight && (
-          <span className="text-[10.5px] text-orange-soft tracking-[0.14em] uppercase font-medium">Популярный</span>
+          <span className="text-[10.5px] text-orange-soft tracking-[0.14em] uppercase font-medium">
+            Популярный
+          </span>
         )}
       </div>
 
-      <div className="relative mb-2">
-        <div className="text-[24px] font-medium text-white leading-snug mb-1">{pack.title}</div>
-        <div className="text-[12px] text-muted-on-navy tracking-[0.1em]">{pack.hours} вождения</div>
+      <div className="relative flex items-start gap-4 mb-3">
+        <span className="w-12 h-12 rounded-[10px] bg-orange/15 grid place-items-center text-orange-soft shrink-0">
+          {pack.icon}
+        </span>
+        <div className="flex-1 min-w-0">
+          <div className="text-[20px] font-medium text-white mb-1 leading-snug">{pack.title}</div>
+          <div className="text-[12px] text-muted-on-navy tracking-[0.04em]">{pack.lessons}</div>
+        </div>
       </div>
 
       <p className="relative text-[13px] text-muted-on-navy leading-[1.55] mb-6">{pack.subtitle}</p>
