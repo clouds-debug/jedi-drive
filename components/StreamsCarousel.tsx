@@ -48,13 +48,13 @@ export function StreamsCarousel() {
 
         <div className="flex items-stretch gap-4 lg:gap-6">
           <div className="hidden md:block">
-            {left ? <SideCard stream={left} side="left" onClick={() => setIndex((i) => i + 1)} /> : <Placeholder />}
+            {left ? <SideCard stream={left} onClick={() => setIndex((i) => i + 1)} /> : <Placeholder />}
           </div>
 
           <MainCard stream={center} />
 
           <div className="hidden md:block">
-            {right ? <SideCard stream={right} side="right" onClick={() => setIndex((i) => i - 1)} /> : <Placeholder />}
+            {right ? <SideCard stream={right} onClick={() => setIndex((i) => i - 1)} /> : <Placeholder />}
           </div>
         </div>
 
@@ -160,7 +160,7 @@ function MainCard({ stream }: { stream: Stream }) {
   );
 }
 
-function SideCard({ stream, side, onClick }: { stream: Stream; side: "left" | "right"; onClick: () => void }) {
+function SideCard({ stream, onClick }: { stream: Stream; onClick: () => void }) {
   const label = stream.status === "upcoming" ? "Скоро" : stream.status === "past" ? "Прошёл" : "Сейчас";
 
   return (
@@ -177,18 +177,6 @@ function SideCard({ stream, side, onClick }: { stream: Stream; side: "left" | "r
         {stream.startShort} — {stream.endShort}
       </div>
       <div className="text-[10px] text-muted-on-navy/70 uppercase tracking-[0.12em] mt-3">{stream.language}</div>
-
-      <svg
-        className={`absolute top-1/2 -translate-y-1/2 ${
-          side === "left" ? "-left-3" : "-right-3"
-        } w-6 h-6 opacity-0 group-hover:opacity-70 transition-all`}
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="#FDBA74"
-        strokeWidth="2"
-      >
-        {side === "left" ? <path d="M15 6l-6 6 6 6" /> : <path d="M9 6l6 6-6 6" />}
-      </svg>
     </button>
   );
 }
