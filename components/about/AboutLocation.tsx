@@ -2,6 +2,8 @@ import { Reveal } from "../Reveal";
 import { SectionLabel } from "../SectionLabel";
 
 const MAPS_LINK = "https://maps.app.goo.gl/i2MwNTmYcXzgypLg8?g_st=ic";
+const MAPS_EMBED =
+  "https://maps.google.com/maps?q=Jedi+Drive+71+Ketevan+Dedopali+Tbilisi&output=embed&z=16&hl=ru";
 
 export function AboutLocation() {
   return (
@@ -25,7 +27,7 @@ export function AboutLocation() {
               <div className="relative h-[360px] lg:h-[440px] bg-white/[0.02]">
                 <iframe
                   title="Jedi Drive на карте"
-                  src="https://www.google.com/maps?q=Тбилиси,+Грузия&output=embed&z=13&hl=ru"
+                  src={MAPS_EMBED}
                   width="100%"
                   height="100%"
                   loading="lazy"
@@ -40,10 +42,10 @@ export function AboutLocation() {
                 <div>
                   <div className="text-[11px] text-orange-soft tracking-[0.16em] uppercase mb-2">Адрес</div>
                   <div className="text-[15px] text-white leading-[1.5]">
-                    Тбилиси, Грузия
+                    Проспект Кетеван Дедопали, 71
                   </div>
                   <div className="text-[12.5px] text-muted-on-navy mt-1">
-                    Точные координаты — по ссылке на карту
+                    Тбилиси, Грузия
                   </div>
                 </div>
 
