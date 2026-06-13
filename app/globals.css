@@ -81,11 +81,31 @@ html {
   animation: ambient-blob 9s ease-in-out infinite;
 }
 
+@keyframes ambient-rotate {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.ambient-rotate {
+  animation: ambient-rotate 24s linear infinite;
+}
+
+@keyframes ambient-ticks {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 1; }
+}
+
+.ambient-ticks {
+  animation: ambient-ticks 3.5s ease-in-out infinite;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .hero-rise,
   .animate-card-in,
   .ambient-lane,
-  .ambient-blob {
+  .ambient-blob,
+  .ambient-rotate,
+  .ambient-ticks {
     animation: none;
   }
   .ambient-lane { opacity: 0.1; }
