@@ -14,8 +14,16 @@ const avatarColors: Record<Instructor["avatarColor"], string> = {
   rose: "bg-rose-500/20 text-rose-200",
 };
 
+const PER_PAGE = 9;
+
 export function InstructorsGrid() {
   const [selected, setSelected] = useState<Instructor | null>(null);
+  const [page, setPage] = useState(0);
+
+  const totalPages = Math.max(1, Math.ceil(instructors.length / PER_PAGE));
+  const start = page * PER_PAGE;
+  const visible = instructors.slice(start, start + PER_PAGE);
+  const hasPagination = totalPages > 1;
 
   useEffect(() => {
     if (!selected) return;
@@ -37,82 +45,160 @@ export function InstructorsGrid() {
         <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-orange/30 to-transparent" aria-hidden />
 
         <div className="mx-auto max-w-7xl px-6 lg:px-10 relative">
-          <Reveal>
-            <SectionLabel num="02">Команда</SectionLabel>
-            <h2 className="text-[28px] sm:text-[34px] font-medium text-white tracking-[-0.015em] mb-3 max-w-[540px]">
-              Все, кто <span className="text-orange">учит</span>
-            </h2>
-            <p className="text-[14px] text-muted-on-navy leading-[1.65] mb-12 max-w-[520px]">
-              Кликни по карточке — расскажу про каждого подробно: характер, стиль преподавания, отзывы выпускников.
-            </p>
-          </Reveal>
+          <div className="flex items-end justify-between gap-6 mb-12">
+            <Reveal className="flex-1">
+              <SectionLabel num="02">Команда</SectionLabel>
+              <h2 className="text-[28px] sm:text-[34px] font-medium text-white tracking-[-0.015em] max-w-[540px]">
+                Все, кто <span className="text-orange">учит</span>
+              </h2>
+              <p className="text-[14px] text-muted-on-navy leading-[1.65] mt-3 max-w-[520px]">
+                Кликни по карточке — расскажу про каждого подробно: характер, стиль преподавания, отзывы выпускников.
+              </p>
+            </Reveal>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-            {instructors.map((inst, i) => (
-              <Reveal key={inst.id} delay={i * 50}>
-                <button
-                  onClick={() => setSelected(inst)}
-                  className="group relative w-full text-left bg-white/[0.03] border border-white/10 border-l-[3px] border-l-orange rounded-[var(--radius-card)] p-5 h-full overflow-hidden transition-all duration-300 hover:bg-white/[0.05] hover:border-white/20 hover:-translate-y-1"
-                >
-                  <div className="absolute -right-12 -top-12 w-44 h-44 bg-orange/[0.08] rounded-full blur-[60px] pointer-events-none" aria-hidden />
-
-                  <div className="relative flex items-center gap-3.5 mb-4">
-                    <span className={`shrink-0 w-14 h-14 rounded-full grid place-items-center text-[15px] font-medium ${avatarColors[inst.avatarColor]}`}>
-                      {inst.initials}
-                    </span>
-                    <div className="flex-1 min-w-0">
-                      <div className="text-[15px] font-medium text-white truncate group-hover:text-orange-soft transition-colors">
-                        {inst.name}
-                      </div>
-                      <div className="flex items-center gap-1.5 mt-1">
-                        <svg width="11" height="11" viewBox="0 0 24 24" fill="#F97316" aria-hidden>
-                          <path d="M12 2l3 7 7 .8-5.3 5 1.6 7L12 18.3 5.7 22l1.6-7L2 9.8l7-.8z" />
-                        </svg>
-                        <span className="text-[12.5px] text-white font-medium">{inst.rating}</span>
-                        <span className="text-[11px] text-muted-on-navy">· {inst.reviewsCount} отзывов</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="relative flex flex-wrap gap-1.5 mb-4">
-                    {inst.languages.map((l) => (
-                      <span key={l} className="text-[10px] font-mono text-orange-soft tracking-[0.2em] uppercase bg-orange/10 px-2 py-0.5 rounded-full">
-                        {l}
-                      </span>
-                    ))}
-                  </div>
-
-                  <div className="relative space-y-1 text-[12.5px] text-muted-on-navy mb-4">
-                    <div className="flex items-center gap-2">
-                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#F97316" strokeWidth="1.7" aria-hidden>
-                        <circle cx="12" cy="12" r="9" />
-                        <path d="M12 7v5l3 2" />
-                      </svg>
-                      Стаж {inst.experienceYears} лет
-                    </div>
-                    <div className="flex items-start gap-2">
-                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#F97316" strokeWidth="1.7" className="mt-0.5 shrink-0" aria-hidden>
-                        <path d="M5 13l1.5-5.5A2 2 0 018.5 6h7a2 2 0 012 1.5L19 13M3 17h18M5 13v3m14-3v3" />
-                      </svg>
-                      {inst.car}
-                    </div>
-                  </div>
-
-                  <div className="relative pt-4 border-t border-white/[0.06] flex items-center justify-between text-[11.5px] text-muted-on-navy">
-                    <span>Подробнее</span>
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#FDBA74" strokeWidth="2" className="-translate-x-1 group-hover:translate-x-0 transition-transform" aria-hidden>
-                      <path d="M5 12h14M13 6l6 6-6 6" />
-                    </svg>
-                  </div>
-                </button>
+            {hasPagination && (
+              <Reveal delay={80} className="hidden sm:flex items-center gap-3 shrink-0 pb-1">
+                <span className="text-[12px] text-muted-on-navy tabular-nums">
+                  {page + 1} / {totalPages}
+                </span>
+                <div className="flex gap-2">
+                  <ArrowButton
+                    dir="left"
+                    disabled={page === 0}
+                    onClick={() => setPage((p) => Math.max(0, p - 1))}
+                  />
+                  <ArrowButton
+                    dir="right"
+                    disabled={page >= totalPages - 1}
+                    onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
+                  />
+                </div>
               </Reveal>
+            )}
+          </div>
+
+          <div
+            key={page}
+            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3"
+          >
+            {visible.map((inst, i) => (
+              <button
+                key={inst.id}
+                onClick={() => setSelected(inst)}
+                className="group relative w-full text-left bg-white/[0.03] border border-white/10 border-l-[3px] border-l-orange rounded-[var(--radius-card)] p-5 h-full overflow-hidden transition-all duration-300 hover:bg-white/[0.05] hover:border-white/20 hover:-translate-y-1 animate-card-in"
+                style={{ animationDelay: `${i * 40}ms` }}
+              >
+                <div className="absolute -right-12 -top-12 w-44 h-44 bg-orange/[0.08] rounded-full blur-[60px] pointer-events-none" aria-hidden />
+
+                <div className="relative flex items-center gap-3.5 mb-4">
+                  <span className={`shrink-0 w-14 h-14 rounded-full grid place-items-center text-[15px] font-medium ${avatarColors[inst.avatarColor]}`}>
+                    {inst.initials}
+                  </span>
+                  <div className="flex-1 min-w-0">
+                    <div className="text-[15px] font-medium text-white truncate group-hover:text-orange-soft transition-colors">
+                      {inst.name}
+                    </div>
+                    <div className="flex items-center gap-1.5 mt-1">
+                      <svg width="11" height="11" viewBox="0 0 24 24" fill="#F97316" aria-hidden>
+                        <path d="M12 2l3 7 7 .8-5.3 5 1.6 7L12 18.3 5.7 22l1.6-7L2 9.8l7-.8z" />
+                      </svg>
+                      <span className="text-[12.5px] text-white font-medium">{inst.rating}</span>
+                      <span className="text-[11px] text-muted-on-navy">· {inst.reviewsCount} отзывов</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="relative flex flex-wrap gap-1.5 mb-4">
+                  {inst.languages.map((l) => (
+                    <span key={l} className="text-[10px] font-mono text-orange-soft tracking-[0.2em] uppercase bg-orange/10 px-2 py-0.5 rounded-full">
+                      {l}
+                    </span>
+                  ))}
+                </div>
+
+                <div className="relative space-y-1 text-[12.5px] text-muted-on-navy mb-4">
+                  <div className="flex items-center gap-2">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#F97316" strokeWidth="1.7" aria-hidden>
+                      <circle cx="12" cy="12" r="9" />
+                      <path d="M12 7v5l3 2" />
+                    </svg>
+                    Стаж {inst.experienceYears} лет
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#F97316" strokeWidth="1.7" className="mt-0.5 shrink-0" aria-hidden>
+                      <path d="M5 13l1.5-5.5A2 2 0 018.5 6h7a2 2 0 012 1.5L19 13M3 17h18M5 13v3m14-3v3" />
+                    </svg>
+                    {inst.car}
+                  </div>
+                </div>
+
+                <div className="relative pt-4 border-t border-white/[0.06] flex items-center justify-between text-[11.5px] text-muted-on-navy">
+                  <span>Подробнее</span>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#FDBA74" strokeWidth="2" className="-translate-x-1 group-hover:translate-x-0 transition-transform" aria-hidden>
+                    <path d="M5 12h14M13 6l6 6-6 6" />
+                  </svg>
+                </div>
+              </button>
             ))}
           </div>
+
+          {hasPagination && (
+            <div className="flex items-center justify-center gap-2 mt-10">
+              {Array.from({ length: totalPages }).map((_, i) => (
+                <button
+                  key={i}
+                  onClick={() => setPage(i)}
+                  aria-label={`Страница ${i + 1}`}
+                  className={`h-1.5 rounded-full transition-all duration-300 ${
+                    i === page ? "w-10 bg-orange" : "w-1.5 bg-white/20 hover:bg-white/40"
+                  }`}
+                />
+              ))}
+            </div>
+          )}
+
+          {hasPagination && (
+            <div className="sm:hidden flex justify-center gap-2 mt-6">
+              <ArrowButton
+                dir="left"
+                disabled={page === 0}
+                onClick={() => setPage((p) => Math.max(0, p - 1))}
+              />
+              <ArrowButton
+                dir="right"
+                disabled={page >= totalPages - 1}
+                onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
+              />
+            </div>
+          )}
         </div>
       </section>
 
       {selected && <InstructorModal instructor={selected} onClose={() => setSelected(null)} />}
     </>
+  );
+}
+
+function ArrowButton({
+  dir,
+  disabled,
+  onClick,
+}: {
+  dir: "left" | "right";
+  disabled: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      disabled={disabled}
+      aria-label={dir === "left" ? "Предыдущая страница" : "Следующая страница"}
+      className="w-10 h-10 rounded-full bg-white/[0.04] border border-white/15 text-white grid place-items-center transition-all hover:bg-white/[0.08] hover:border-white/30 hover:text-orange-soft active:scale-95 disabled:opacity-25 disabled:cursor-not-allowed"
+    >
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+        {dir === "left" ? <path d="M15 6l-6 6 6 6" /> : <path d="M9 6l6 6-6 6" />}
+      </svg>
+    </button>
   );
 }
 
@@ -138,7 +224,7 @@ function InstructorModal({ instructor, onClose }: { instructor: Instructor; onCl
           </svg>
         </button>
 
-        <div className="overflow-y-auto p-6 sm:p-8 relative">
+        <div className="overflow-y-auto p-6 sm:p-8 relative [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           <div className="flex items-start gap-5 mb-6 pr-10">
             <span className={`shrink-0 w-20 h-20 rounded-full grid place-items-center text-[22px] font-medium ${avatarColors[instructor.avatarColor]}`}>
               {instructor.initials}
