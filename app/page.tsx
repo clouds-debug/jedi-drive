@@ -5,10 +5,12 @@ import { Process } from "@/components/Process";
 import { Reviews } from "@/components/Reviews";
 import { Contact } from "@/components/Contact";
 import { Footer } from "@/components/Footer";
+import { HomepageAmbient } from "@/components/HomepageAmbient";
 
 export default function HomePage() {
   return (
     <>
+      <HomepageAmbient />
       <Nav />
       <main>
         <Hero />
