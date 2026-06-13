@@ -99,13 +99,40 @@ html {
   animation: ambient-ticks 3.5s ease-in-out infinite;
 }
 
+@keyframes road-dash {
+  to { stroke-dashoffset: -64; }
+}
+
+.road-dash {
+  animation: road-dash 1.4s linear infinite;
+}
+
+.road-dash-reverse {
+  animation: road-dash 1.9s linear infinite reverse;
+}
+
+@keyframes speedo-needle {
+  0%, 100% { transform: rotate(-30deg); }
+  20% { transform: rotate(70deg); }
+  45% { transform: rotate(15deg); }
+  70% { transform: rotate(95deg); }
+  90% { transform: rotate(0deg); }
+}
+
+.speedo-needle {
+  animation: speedo-needle 9s ease-in-out infinite;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .hero-rise,
   .animate-card-in,
   .ambient-lane,
   .ambient-blob,
   .ambient-rotate,
-  .ambient-ticks {
+  .ambient-ticks,
+  .road-dash,
+  .road-dash-reverse,
+  .speedo-needle {
     animation: none;
   }
   .ambient-lane { opacity: 0.1; }
