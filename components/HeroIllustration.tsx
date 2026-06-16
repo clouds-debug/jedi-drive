@@ -32,7 +32,6 @@ export function HeroIllustration() {
       car.setAttribute("transform", `translate(${p.x} ${p.y}) rotate(${angle})`);
     }, 33);
     return () => window.clearInterval(intervalId);
-    return () => cancelAnimationFrame(raf);
   }, []);
 
   return (
