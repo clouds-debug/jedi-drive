@@ -17,9 +17,6 @@ export function Footer() {
       <div className="mx-auto max-w-7xl px-6 lg:px-10">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-10">
           <div className="md:col-span-2">
-            <L href="/" className="inline-flex items-center mb-3" aria-label="Jedi Drive">
-              <img src="/logo.svg" alt="Jedi Drive" className="h-14 w-auto" />
-            </L>
             <p className="text-[13px] leading-[1.6] max-w-[340px]">
               <EditableText storageKey="footer.tagline" multiline>
                 {t("footer.tagline")}

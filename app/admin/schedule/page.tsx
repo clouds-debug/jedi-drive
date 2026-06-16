@@ -34,6 +34,8 @@ export default async function SchedulePage() {
     userLastName: l.user_last_name,
     userPhone: l.user_phone,
     userTelegram: l.user_telegram_username,
+    guestName: l.guest_name,
+    guestContact: l.guest_contact,
     kind: l.kind,
     format: l.format,
     hhmm: l.hhmm,
