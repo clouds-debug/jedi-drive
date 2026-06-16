@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { L, useT, useLocale } from "@/lib/i18n/client";
 import { stripLocalePrefix, withLocalePrefix, type Locale } from "@/lib/i18n/config";
@@ -268,13 +268,35 @@ function NavLink({ item, isActive, label }: { item: NavItem; isActive: boolean; 
 
 function ServicesItem({ isActive, pathname }: { isActive: boolean; pathname: string }) {
   const { t } = useT();
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
   const theoryActive = pathname.startsWith("/services/theory");
   const practiceActive = pathname.startsWith("/services/practice");
 
+  useEffect(() => {
+    setOpen(false);
+  }, [pathname]);
+
+  useEffect(() => {
+    if (!open) return;
+    function onDown(e: MouseEvent | TouchEvent) {
+      if (!ref.current) return;
+      if (!ref.current.contains(e.target as Node)) setOpen(false);
+    }
+    document.addEventListener("mousedown", onDown);
+    document.addEventListener("touchstart", onDown);
+    return () => {
+      document.removeEventListener("mousedown", onDown);
+      document.removeEventListener("touchstart", onDown);
+    };
+  }, [open]);
+
   return (
-    <div className="relative group">
+    <div ref={ref} className="relative group">
       <button
         type="button"
+        onClick={() => setOpen((v) => !v)}
+        aria-expanded={open}
         className={`relative px-3.5 py-2.5 flex items-center gap-2 transition-colors ${
           isActive ? "text-white" : "text-muted-on-navy hover:text-white"
         }`}
@@ -282,9 +304,7 @@ function ServicesItem({ isActive, pathname }: { isActive: boolean; pathname: str
         <span className="relative flex items-center gap-2">
           <span
             className={`w-1 h-1 rounded-full transition-all ${
-              isActive
-                ? "bg-orange scale-100"
-                : "bg-orange scale-0 group-hover:scale-100"
+              isActive || open ? "bg-orange scale-100" : "bg-orange scale-0 group-hover:scale-100"
             }`}
             aria-hidden
           />
@@ -294,7 +314,7 @@ function ServicesItem({ isActive, pathname }: { isActive: boolean; pathname: str
           width="10"
           height="10"
           viewBox="0 0 12 12"
-          className="opacity-60 transition-transform duration-300 group-hover:rotate-180"
+          className={`opacity-60 transition-transform duration-300 ${open ? "rotate-180" : ""}`}
           aria-hidden
         >
           <path d="M2 4 L6 8 L10 4" fill="none" stroke="currentColor" strokeWidth="1.5" />
@@ -307,7 +327,11 @@ function ServicesItem({ isActive, pathname }: { isActive: boolean; pathname: str
         />
       </button>
 
-      <div className="absolute left-[-14px] top-[calc(100%+10px)] min-w-[268px] bg-navy border border-white/10 rounded-xl p-2 shadow-[0_18px_50px_rgba(0,0,0,0.55)] opacity-0 invisible translate-y-[-6px] group-hover:opacity-100 group-hover:visible group-hover:translate-y-0 group-focus-within:opacity-100 group-focus-within:visible group-focus-within:translate-y-0 transition-all duration-200 z-50 overflow-hidden">
+      <div
+        className={`absolute left-[-14px] top-[calc(100%+10px)] min-w-[268px] bg-navy border border-white/10 rounded-xl p-2 shadow-[0_18px_50px_rgba(0,0,0,0.55)] transition-all duration-200 z-50 overflow-hidden ${
+          open ? "opacity-100 visible translate-y-0" : "opacity-0 invisible translate-y-[-6px]"
+        }`}
+      >
         <div className="absolute -right-12 -top-12 w-44 h-44 bg-orange/[0.15] rounded-full blur-[60px] pointer-events-none" aria-hidden />
 
         <L
