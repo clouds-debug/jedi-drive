@@ -85,7 +85,7 @@ export default async function ReviewsPage({
         Одобряй правдивые, отклоняй обидные или ложные. Отказ можно сопроводить причиной — она уйдёт ученику в уведомлении.
       </p>
 
-      <nav className="flex md:flex-wrap gap-1 border-b border-white/[0.08] mb-6 overflow-x-auto md:overflow-visible -mx-4 px-4 md:mx-0 md:px-0 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+      <nav className="flex md:flex-wrap gap-1 border-b border-white/[0.08] mb-6 overflow-x-auto md:overflow-visible overscroll-x-contain touch-pan-x -mx-4 px-4 md:mx-0 md:px-0 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {TABS.map((t) => {
           const active = t.key === status;
           return (

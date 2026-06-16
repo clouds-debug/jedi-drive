@@ -75,7 +75,7 @@ export default async function UsersPage({
         Меняй роли, блокируй спамеров. Для инструкторов — скрытие из публичной части и полное удаление.
       </p>
 
-      <nav className="flex md:flex-wrap gap-1 border-b border-white/[0.08] mb-5 overflow-x-auto md:overflow-visible -mx-4 px-4 md:mx-0 md:px-0 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+      <nav className="flex md:flex-wrap gap-1 border-b border-white/[0.08] mb-5 overflow-x-auto md:overflow-visible overscroll-x-contain touch-pan-x -mx-4 px-4 md:mx-0 md:px-0 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {TABS.map((t) => {
           const active = t.key === tab;
           const cnt = counts[t.key] ?? 0;
