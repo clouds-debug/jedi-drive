@@ -5,7 +5,9 @@ import { Reveal } from "@/components/Reveal";
 import { SectionLabel } from "@/components/SectionLabel";
 import { TicketsModes } from "@/components/tickets/TicketsModes";
 import { TicketsTopics } from "@/components/tickets/TicketsTopics";
+import { EditableText } from "@/components/content/EditableText";
 import { questions } from "@/lib/tickets/data";
+import { getT } from "@/lib/i18n/server";
 
 export const metadata: Metadata = {
   title: "Билеты — Jedi Drive",
@@ -13,7 +15,10 @@ export const metadata: Metadata = {
     "Тренируйся на экзаменационных билетах категории B. Случайный экзамен, тренировка по темам — всё бесплатно и без регистрации.",
 };
 
-export default function TicketsPage() {
+export const dynamic = "force-dynamic";
+
+export default async function TicketsPage() {
+  const { t } = await getT();
   const total = questions.length;
   return (
     <>
@@ -24,15 +29,20 @@ export default function TicketsPage() {
 
           <div className="mx-auto max-w-7xl px-6 lg:px-10 relative">
             <Reveal>
-              <SectionLabel num="00">Билеты · категория B</SectionLabel>
+              <SectionLabel num="00">
+                <EditableText storageKey="tickets.hero.label">{t("tickets.hero.label")}</EditableText>
+              </SectionLabel>
               <h1 className="hero-rise text-[32px] sm:text-[44px] lg:text-[52px] font-medium text-white tracking-[-0.02em] leading-[1.05] mb-4 max-w-[680px]">
-                Тренируйся как на <span className="text-orange">экзамене</span>
+                <EditableText storageKey="tickets.hero.title.lead">{t("tickets.hero.title.lead")}</EditableText>{" "}
+                <span className="text-orange">
+                  <EditableText storageKey="tickets.hero.title.accent">{t("tickets.hero.title.accent")}</EditableText>
+                </span>
               </h1>
               <p
                 className="hero-rise text-[14.5px] sm:text-[15.5px] text-muted-on-navy leading-[1.65] mb-8 max-w-[540px]"
                 style={{ animationDelay: "80ms" }}
               >
-                База официальных билетов МВД Грузии. Решай вопросы, привыкай к формулировкам, делай разбор ошибок после теста.
+                <EditableText storageKey="tickets.hero.subtitle" multiline>{t("tickets.hero.subtitle")}</EditableText>
               </p>
 
               <div
@@ -41,12 +51,16 @@ export default function TicketsPage() {
               >
                 <span className="flex items-center gap-2">
                   <span className="w-1.5 h-1.5 rounded-full bg-orange" />
-                  В базе {total} вопросов
+                  {t("tickets.hero.chip.count", { n: total })}
                 </span>
                 <span className="w-px h-3.5 bg-white/15" />
-                <span>Без регистрации</span>
+                <span>
+                  <EditableText storageKey="tickets.hero.chip.noreg">{t("tickets.hero.chip.noreg")}</EditableText>
+                </span>
                 <span className="w-px h-3.5 bg-white/15" />
-                <span>Бесплатно</span>
+                <span>
+                  <EditableText storageKey="tickets.hero.chip.free">{t("tickets.hero.chip.free")}</EditableText>
+                </span>
               </div>
             </Reveal>
           </div>

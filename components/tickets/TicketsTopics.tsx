@@ -1,7 +1,11 @@
-import Link from "next/link";
+"use client";
+
 import { Reveal } from "../Reveal";
 import { SectionLabel } from "../SectionLabel";
+import { EditableText } from "../content/EditableText";
 import { topics, questions } from "@/lib/tickets/data";
+import { TopicProgressBadge, TopicProgressBar } from "./TopicProgressBadge";
+import { L, useT } from "@/lib/i18n/client";
 
 const iconMap: Record<string, React.ReactNode> = {
   sign: (
@@ -56,27 +60,35 @@ const iconMap: Record<string, React.ReactNode> = {
 };
 
 export function TicketsTopics() {
+  const { t } = useT();
   return (
     <section id="topics" className="bg-navy py-20 relative overflow-hidden">
       <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-orange/30 to-transparent" aria-hidden />
 
       <div className="mx-auto max-w-7xl px-6 lg:px-10 relative">
         <Reveal>
-          <SectionLabel num="02">Темы</SectionLabel>
+          <SectionLabel num="02">
+            <EditableText storageKey="tickets.topics.section.label">{t("tickets.topics.section.label")}</EditableText>
+          </SectionLabel>
           <h2 className="text-[28px] sm:text-[34px] font-medium text-white tracking-[-0.015em] mb-3 max-w-[540px]">
-            Тренируйся по <span className="text-orange">блокам</span>
+            <EditableText storageKey="tickets.topics.title.lead">{t("tickets.topics.title.lead")}</EditableText>{" "}
+            <span className="text-orange">
+              <EditableText storageKey="tickets.topics.title.accent">{t("tickets.topics.title.accent")}</EditableText>
+            </span>
           </h2>
           <p className="text-[14px] text-muted-on-navy leading-[1.65] mb-10 max-w-[520px]">
-            Восемь тематических групп — выбирай слабое место и закрывай его до автоматизма.
+            <EditableText storageKey="tickets.topics.subtitle" multiline>{t("tickets.topics.subtitle")}</EditableText>
           </p>
         </Reveal>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
           {topics.map((topic, i) => {
             const count = questions.filter((q) => q.topicId === topic.id).length;
+            const titleKey = `tickets.topic.${topic.id}.title`;
+            const descKey = `tickets.topic.${topic.id}.desc`;
             return (
               <Reveal key={topic.id} delay={i * 50}>
-                <Link
+                <L
                   href={`/tickets/quiz?mode=topic&topic=${topic.id}`}
                   className="group relative block bg-white/[0.03] border border-white/10 border-l-[3px] border-l-orange rounded-[var(--radius-card)] p-5 h-full overflow-hidden transition-all duration-300 hover:bg-white/[0.05] hover:border-white/20 hover:-translate-y-1"
                 >
@@ -86,16 +98,24 @@ export function TicketsTopics() {
                     <span className="w-11 h-11 rounded-[10px] bg-orange/15 grid place-items-center text-orange-soft">
                       {iconMap[topic.icon]}
                     </span>
-                    <span className="text-[10.5px] text-muted-on-navy tracking-[0.12em] uppercase mt-1">
-                      {count} вопр.
+                    <span className="mt-1 flex flex-col items-end gap-1">
+                      <span className="text-[10.5px] text-muted-on-navy tracking-[0.12em] uppercase">
+                        {t("tickets.topics.questions", { n: count })}
+                      </span>
+                      <TopicProgressBadge topicId={topic.id} total={count} />
                     </span>
                   </div>
 
-                  <h3 className="relative text-[15px] font-medium text-white mb-1.5 leading-snug">{topic.title}</h3>
-                  <p className="relative text-[12.5px] text-muted-on-navy leading-[1.55]">{topic.description}</p>
+                  <h3 className="relative text-[15px] font-medium text-white mb-1.5 leading-snug">
+                    <EditableText storageKey={titleKey}>{t(titleKey)}</EditableText>
+                  </h3>
+                  <p className="relative text-[12.5px] text-muted-on-navy leading-[1.55]">
+                    <EditableText storageKey={descKey} multiline>{t(descKey)}</EditableText>
+                  </p>
+                  <TopicProgressBar topicId={topic.id} />
 
                   <div className="relative mt-5 pt-4 border-t border-white/[0.06] flex items-center justify-between text-[11.5px] text-muted-on-navy">
-                    <span>Начать тренировку</span>
+                    <span>{t("tickets.topics.start")}</span>
                     <svg
                       width="14"
                       height="14"
@@ -109,7 +129,7 @@ export function TicketsTopics() {
                       <path d="M5 12h14M13 6l6 6-6 6" />
                     </svg>
                   </div>
-                </Link>
+                </L>
               </Reveal>
             );
           })}

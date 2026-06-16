@@ -1,31 +1,48 @@
 "use client";
 
-import Link from "next/link";
-import { useState } from "react";
-import type { Question, Topic } from "@/lib/tickets/data";
+import { useEffect, useState } from "react";
+import type { Question, Topic, LocalizedText } from "@/lib/tickets/data";
+import {
+  recordExamResult,
+  recordQuestionResult,
+  recordTopicResult,
+} from "@/lib/tickets/progress";
+import { EditableText } from "@/components/content/EditableText";
+import { L, useT } from "@/lib/i18n/client";
+import type { Locale } from "@/lib/i18n/config";
+
+function pick(text: LocalizedText, locale: Locale): string {
+  return text[locale] || text.ru;
+}
 
 type QuizProps = {
   questions: Question[];
-  mode: "exam" | "topic";
+  mode: "exam" | "topic" | "mistakes";
   topic?: Topic;
 };
 
 export function Quiz({ questions, mode, topic }: QuizProps) {
+  const { t, locale } = useT();
   const [index, setIndex] = useState(0);
   const [answers, setAnswers] = useState<(number | null)[]>(() => Array(questions.length).fill(null));
   const [finished, setFinished] = useState(false);
 
   if (questions.length === 0) {
+    const isMistakes = mode === "mistakes";
     return (
       <div className="bg-white/[0.03] border border-white/10 rounded-2xl p-10 text-center">
-        <div className="text-[16px] text-white mb-3">В этой теме пока нет вопросов</div>
-        <p className="text-[13px] text-muted-on-navy mb-6">Скоро добавим — а пока попробуй другие темы или экзамен.</p>
-        <Link
+        <div className="text-[16px] text-white mb-3">
+          {isMistakes ? t("tickets.quiz.empty.mistakes.title") : t("tickets.quiz.empty.topic.title")}
+        </div>
+        <p className="text-[13px] text-muted-on-navy mb-6">
+          {isMistakes ? t("tickets.quiz.empty.mistakes.desc") : t("tickets.quiz.empty.topic.desc")}
+        </p>
+        <L
           href="/tickets"
           className="inline-flex items-center gap-2 bg-orange text-white px-5 py-2.5 rounded-lg text-[13.5px] font-medium hover:bg-[#EA670F] transition-colors"
         >
-          Назад к билетам
-        </Link>
+          {t("tickets.quiz.back")}
+        </L>
       </div>
     );
   }
@@ -37,6 +54,7 @@ export function Quiz({ questions, mode, topic }: QuizProps) {
   const current = questions[index];
   const currentAnswer = answers[index];
   const hasAnswered = currentAnswer !== null;
+  const topicTitle = topic ? t(`tickets.topic.${topic.id}.title`) : "";
 
   function select(i: number) {
     if (hasAnswered) return;
@@ -45,6 +63,7 @@ export function Quiz({ questions, mode, topic }: QuizProps) {
       next[index] = i;
       return next;
     });
+    recordQuestionResult(current.id, i === current.correctIndex);
   }
 
   function next() {
@@ -67,11 +86,11 @@ export function Quiz({ questions, mode, topic }: QuizProps) {
 
         <div className="relative flex items-center justify-between mb-5">
           <span className="text-[11px] text-muted-on-navy tracking-[0.14em] uppercase">
-            Вопрос {index + 1} из {questions.length}
+            {t("tickets.quiz.question", { i: index + 1, n: questions.length })}
           </span>
           {topic && (
             <span className="inline-flex items-center bg-orange/15 text-orange-soft px-2.5 py-1 rounded-full text-[10.5px] font-medium tracking-[0.12em] uppercase">
-              {topic.title}
+              {topicTitle}
             </span>
           )}
         </div>
@@ -81,13 +100,15 @@ export function Quiz({ questions, mode, topic }: QuizProps) {
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={current.image}
-              alt="Иллюстрация к вопросу"
+              alt={t("tickets.quiz.image.alt")}
               className="w-full max-h-[280px] object-contain"
             />
           </div>
         )}
         <h2 className="relative text-[18px] sm:text-[20px] font-medium text-white leading-snug mb-6">
-          {current.text}
+          <EditableText storageKey={`tickets.q.${current.id}.text.${locale}`} multiline>
+            {pick(current.text, locale)}
+          </EditableText>
         </h2>
 
         <div className="relative space-y-2.5">
@@ -128,7 +149,11 @@ export function Quiz({ questions, mode, topic }: QuizProps) {
                       String.fromCharCode(65 + i)
                     )}
                   </span>
-                  <span>{opt}</span>
+                  <span>
+                    <EditableText storageKey={`tickets.q.${current.id}.opt.${i}.${locale}`} multiline>
+                      {pick(opt, locale)}
+                    </EditableText>
+                  </span>
                 </span>
               </button>
             );
@@ -141,7 +166,7 @@ export function Quiz({ questions, mode, topic }: QuizProps) {
               onClick={next}
               className="inline-flex items-center gap-2 bg-orange text-white px-6 py-3 rounded-lg text-[13.5px] font-medium hover:bg-[#EA670F] hover:translate-x-0.5 transition-all"
             >
-              {index < questions.length - 1 ? "Дальше" : "Завершить и посмотреть разбор"}
+              {index < questions.length - 1 ? t("tickets.quiz.next") : t("tickets.quiz.finish")}
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
                 <path d="M5 12h14M13 6l6 6-6 6" />
               </svg>
@@ -154,12 +179,13 @@ export function Quiz({ questions, mode, topic }: QuizProps) {
 }
 
 function ProgressBar({ index, total }: { index: number; total: number }) {
+  const { t } = useT();
   const answered = index;
   const pct = (answered / total) * 100;
   return (
     <div className="bg-white/[0.04] border border-white/10 rounded-lg p-4">
       <div className="flex items-center justify-between text-[11.5px] text-muted-on-navy mb-2 tracking-[0.06em]">
-        <span>Прогресс</span>
+        <span>{t("tickets.quiz.progress")}</span>
         <span>
           {answered} / {total}
         </span>
@@ -182,13 +208,31 @@ function QuizResults({
 }: {
   questions: Question[];
   answers: (number | null)[];
-  mode: "exam" | "topic";
+  mode: "exam" | "topic" | "mistakes";
   topic?: Topic;
 }) {
+  const { t, locale } = useT();
   const correct = answers.filter((a, i) => a !== null && a === questions[i].correctIndex).length;
   const total = questions.length;
   const pct = Math.round((correct / total) * 100);
-  const passed = mode === "exam" ? pct >= 90 : pct >= 70;
+  const mistakesCount = total - correct;
+  const passed = mode === "exam" ? mistakesCount <= 5 : pct >= 70;
+
+  useEffect(() => {
+    if (mode === "topic" && topic) {
+      recordTopicResult(topic.id, correct, total);
+    } else if (mode === "exam") {
+      recordExamResult(correct, total);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const headerLabel =
+    mode === "exam"
+      ? t("tickets.quiz.results.exam")
+      : mode === "mistakes"
+      ? t("tickets.quiz.results.mistakes")
+      : t("tickets.quiz.results.topic", { name: topic ? t(`tickets.topic.${topic.id}.title`) : "" });
 
   return (
     <div className="space-y-6">
@@ -198,29 +242,36 @@ function QuizResults({
         <div className="relative flex items-start justify-between gap-6 flex-wrap">
           <div>
             <div className="text-[11px] text-muted-on-navy tracking-[0.18em] uppercase mb-1.5">
-              {mode === "exam" ? "Экзамен · разбор" : `Тема · ${topic?.title}`}
+              {headerLabel}
             </div>
             <div className="text-[48px] sm:text-[56px] font-medium text-white leading-none tracking-tight mb-2">
-              {correct} <span className="text-muted-on-navy text-[28px]">из {total}</span>
+              {correct} <span className="text-muted-on-navy text-[28px]">{t("tickets.quiz.results.outOf", { n: total })}</span>
             </div>
             <div className={`text-[14px] font-medium ${passed ? "text-[#22C55E]" : "text-orange-soft"}`}>
-              {passed ? "Сдал" : "Не сдал"} · {pct}%
+              {passed ? t("tickets.quiz.results.passed") : t("tickets.quiz.results.failed")}
+              {mode === "exam" ? ` · ${t("tickets.quiz.results.mistakes.count", { n: mistakesCount })}` : ` · ${pct}%`}
             </div>
           </div>
 
           <div className="flex gap-2">
-            <Link
+            <L
               href="/tickets"
               className="bg-white/[0.06] border border-white/15 text-white px-4 py-2.5 rounded-lg text-[13px] hover:bg-white/[0.1] transition-colors"
             >
-              К билетам
-            </Link>
-            <Link
-              href={mode === "exam" ? "/tickets/quiz?mode=exam" : `/tickets/quiz?mode=topic&topic=${topic?.id}`}
+              {t("tickets.quiz.results.tickets")}
+            </L>
+            <L
+              href={
+                mode === "exam"
+                  ? "/tickets/quiz?mode=exam"
+                  : mode === "mistakes"
+                  ? "/tickets/quiz?mode=mistakes"
+                  : `/tickets/quiz?mode=topic&topic=${topic?.id}`
+              }
               className="bg-orange text-white px-4 py-2.5 rounded-lg text-[13px] font-medium hover:bg-[#EA670F] transition-colors"
             >
-              Ещё раз
-            </Link>
+              {t("tickets.quiz.results.again")}
+            </L>
           </div>
         </div>
       </div>
@@ -250,7 +301,9 @@ function QuizResults({
                 >
                   {qi + 1}
                 </span>
-                <h3 className="text-[15px] text-white leading-snug pt-0.5">{q.text}</h3>
+                <h3 className="text-[15px] text-white leading-snug pt-0.5">
+                  <EditableText storageKey={`tickets.q.${q.id}.text.${locale}`} multiline>{pick(q.text, locale)}</EditableText>
+                </h3>
               </div>
 
               {q.image && (
@@ -258,7 +311,7 @@ function QuizResults({
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={q.image}
-                    alt="Иллюстрация к вопросу"
+                    alt={t("tickets.quiz.image.alt")}
                     className="w-full max-h-[220px] object-contain"
                   />
                 </div>
@@ -280,12 +333,14 @@ function QuizResults({
                         <span className="text-[11px] text-muted-on-navy tabular-nums shrink-0">
                           {String.fromCharCode(65 + oi)}.
                         </span>
-                        <span className="flex-1">{opt}</span>
+                        <span className="flex-1">
+                          <EditableText storageKey={`tickets.q.${q.id}.opt.${oi}.${locale}`} multiline>{pick(opt, locale)}</EditableText>
+                        </span>
                         {isAnsCorrect && (
-                          <span className="text-[11px] text-[#22C55E] tracking-[0.1em] uppercase">верно</span>
+                          <span className="text-[11px] text-[#22C55E] tracking-[0.1em] uppercase">{t("tickets.quiz.answer.correct")}</span>
                         )}
                         {isUser && !isAnsCorrect && (
-                          <span className="text-[11px] text-orange-soft tracking-[0.1em] uppercase">ваш ответ</span>
+                          <span className="text-[11px] text-orange-soft tracking-[0.1em] uppercase">{t("tickets.quiz.answer.yours")}</span>
                         )}
                       </span>
                     </div>
@@ -293,10 +348,6 @@ function QuizResults({
                 })}
               </div>
 
-              <div className="pl-10 pt-3 border-t border-white/[0.06]">
-                <div className="text-[11px] text-orange-soft tracking-[0.12em] uppercase mb-1.5">Разбор</div>
-                <p className="text-[13px] text-muted-on-navy leading-[1.6]">{q.explanation}</p>
-              </div>
             </article>
           );
         })}

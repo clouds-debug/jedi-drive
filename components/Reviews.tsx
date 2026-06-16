@@ -3,44 +3,22 @@
 import { useRef } from "react";
 import { Reveal } from "./Reveal";
 import { SectionLabel } from "./SectionLabel";
+import { EditableText } from "./content/EditableText";
+import { useT } from "@/lib/i18n/client";
 
 const reviews = [
-  {
-    text: "Сдала с первого раза. Инструктор Гиоргий очень спокойный, объяснял на двух языках, чтобы я точно поняла. Спасибо!",
-    name: "Анна К.",
-    when: "Выпуск март 2025",
-    initials: "АК",
-  },
-  {
-    text: "Брал только практику. Площадка прямо как на экзамене, а в городе инструктор показал все маршруты МВД. Сдал с первого раза.",
-    name: "Давид М.",
-    when: "Выпуск январь 2026",
-    initials: "ДМ",
-  },
-  {
-    text: "Теорию проходила онлайн в группе — удобно, что не нужно было ехать в офис. Преподаватель отвечал на все глупые вопросы без раздражения.",
-    name: "Мариам Г.",
-    when: "Выпуск февраль 2026",
-    initials: "МГ",
-  },
-  {
-    text: "Сначала боялся вождения в Тбилиси, но инструктор быстро снял страх. Через месяц уже спокойно ездил по центру в час пик.",
-    name: "Никита В.",
-    when: "Выпуск ноябрь 2025",
-    initials: "НВ",
-  },
-  {
-    text: "Брал индивидуально — собирали программу под мой график. Учился по выходным утром, всё подошло. Сдал теорию и практику подряд.",
-    name: "Лука Б.",
-    when: "Выпуск апрель 2026",
-    initials: "ЛБ",
-  },
-  {
-    text: "Отдельное спасибо за разбор сложных билетов. После трёх занятий с инструктором перестала путаться в приоритетах на перекрёстках.",
-    name: "София Т.",
-    when: "Выпуск декабрь 2025",
-    initials: "СТ",
-  },
+  { key: "neko", text: "Лучший результат за кратчайшие сроки! Благодаря профессиональному мастерству и дружелюбному подходу наставника, сдала на права с 1 раза! 😁 Безоговорочно советую, на своем опыте обещаю не пожалеете 🔥", name: "Neko", initials: "NE" },
+  { key: "nino", text: "Очень приятная автошкола с дружелюбной атмосферой. Занятия проходят весело, на позитиве и при этом максимально эффективно. Инструктор поддерживает и всё объясняет спокойно и понятно. Учиться было комфортно, однозначно рекомендую 💞", name: "Nino Cholaria", initials: "NC" },
+  { key: "vakho", text: "Очень интересно проходит обучение, великолепный учитель, всем советую 💥", name: "Вахо Чеминава", initials: "ВЧ" },
+  { key: "ami", text: "Лучшее ❤️ всем советую 👍🏻", name: "Ами Ами", initials: "АА" },
+  { key: "vano", text: "შესანიშნავი ავტოსკოლაა! სწავლამ ძალიან მარტივად და კომფორტულად ჩაიარა, ყველაფერს გასაგებად ხსნიან, ზედმეტი ზეწოლის გარეშე. ინსტრუქტორი უბრალოდ საუკეთესოა — მხარს მიჭერდა, შეცდომების გამოსწორებაში მეხმარებოდა და თავდაჯერებულობას მმატებდა. დიდი მადლობა ასეთი კარგი გამოცდილებისთვის! მისი დახმარებით ახლა საჭესთან თავს ძალიან თავდაჯერებულად ვგრძნობ. ყველას გირჩევთ!", name: "Vano Darsania", initials: "VD" },
+  { key: "tea", text: "საუკეთესო გარემო იმისთვის რომ მალე აიღოთ მართვის მოწმობა. მიენდეთ ამ გამოცდილ გუნდს", name: "Tea Tsulaia", initials: "TT" },
+  { key: "mariam-ts", text: "რეკომენდაცია დიმიტრი მასწავლებელს ავტომატიკაზე, ძალიან კარგად ხსნის 🙏🏻", name: "Mariam Tsitulauri", initials: "MT" },
+  { key: "jano", text: "ძაან კომფორტული სივრცე და საუკეთესო ავტოსკოლა 💯", name: "Jano Tsikolia", initials: "JT" },
+  { key: "dato", text: "ჯიგრული გუნდი! რეკომენდაციაა ჩემგან!", name: "Dato Matua", initials: "DM" },
+  { key: "natalia", text: "ძალიან მიხარია, რომ ეს სკოლა ავირჩიე. მომწონს, რომ პროფესიონალი გუნდია. ყველაფერს დეტალურად ხსნიან", name: "Natalia Patsuria", initials: "NP" },
+  { key: "tiko", text: "საუკეთესოები ☺️🚗", name: "Tiko Isashvili", initials: "TI" },
+  { key: "mari", text: "საუკეთესოები 🤍🤍🤍✨✨", name: "Mari Kvachaxia", initials: "MK" },
 ];
 
 function Star() {
@@ -51,11 +29,11 @@ function Star() {
   );
 }
 
-function ArrowButton({ dir, onClick }: { dir: "left" | "right"; onClick: () => void }) {
+function ArrowButton({ dir, onClick, label }: { dir: "left" | "right"; onClick: () => void; label: string }) {
   return (
     <button
       onClick={onClick}
-      aria-label={dir === "left" ? "Предыдущие отзывы" : "Следующие отзывы"}
+      aria-label={label}
       className="w-10 h-10 rounded-full bg-white/[0.04] border border-white/15 text-white grid place-items-center transition-all hover:bg-white/[0.08] hover:border-white/30 hover:text-orange-soft active:scale-95"
     >
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -66,6 +44,7 @@ function ArrowButton({ dir, onClick }: { dir: "left" | "right"; onClick: () => v
 }
 
 export function Reviews() {
+  const { t } = useT();
   const scrollRef = useRef<HTMLDivElement>(null);
 
   function scroll(dir: "left" | "right") {
@@ -84,15 +63,20 @@ export function Reviews() {
       <div className="mx-auto max-w-7xl px-6 lg:px-10 relative">
         <div className="flex items-end justify-between gap-6 mb-10">
           <Reveal className="flex-1">
-            <SectionLabel num="03">Отзывы</SectionLabel>
+            <SectionLabel num="03">
+              <EditableText storageKey="home.reviews.section.label">{t("home.reviews.section.label")}</EditableText>
+            </SectionLabel>
             <h2 className="text-[28px] sm:text-[34px] font-medium text-white tracking-[-0.015em] max-w-[540px]">
-              Что говорят <span className="text-orange">выпускники</span>
+              <EditableText storageKey="home.reviews.section.title.lead">{t("home.reviews.section.title.lead")}</EditableText>{" "}
+              <span className="text-orange">
+                <EditableText storageKey="home.reviews.section.title.accent">{t("home.reviews.section.title.accent")}</EditableText>
+              </span>
             </h2>
           </Reveal>
 
           <Reveal delay={80} className="hidden sm:flex gap-2 shrink-0 pb-1">
-            <ArrowButton dir="left" onClick={() => scroll("left")} />
-            <ArrowButton dir="right" onClick={() => scroll("right")} />
+            <ArrowButton dir="left" onClick={() => scroll("left")} label={t("home.reviews.prev")} />
+            <ArrowButton dir="right" onClick={() => scroll("right")} label={t("home.reviews.next")} />
           </Reveal>
         </div>
 
@@ -104,7 +88,7 @@ export function Reviews() {
             <div className="flex gap-4">
               {reviews.map((r) => (
                 <article
-                  key={r.name}
+                  key={r.key}
                   className="snap-start shrink-0 w-[300px] sm:w-[340px] lg:w-[calc((100%-32px)/3)] bg-white/[0.03] border border-white/10 rounded-[var(--radius-card)] p-6 transition-all duration-300 hover:bg-white/[0.05] hover:border-white/20"
                 >
                   <div className="flex gap-0.5 text-orange mb-4">
@@ -117,7 +101,7 @@ export function Reviews() {
                     </span>
                     <div>
                       <div className="text-[13px] font-medium text-white">{r.name}</div>
-                      <div className="text-[11.5px] text-muted-on-navy">{r.when}</div>
+                      <div className="text-[11.5px] text-muted-on-navy">{t("home.reviews.from")}</div>
                     </div>
                   </div>
                 </article>
@@ -127,8 +111,8 @@ export function Reviews() {
         </Reveal>
 
         <div className="sm:hidden flex gap-2 mt-6 justify-center">
-          <ArrowButton dir="left" onClick={() => scroll("left")} />
-          <ArrowButton dir="right" onClick={() => scroll("right")} />
+          <ArrowButton dir="left" onClick={() => scroll("left")} label={t("home.reviews.prev")} />
+          <ArrowButton dir="right" onClick={() => scroll("right")} label={t("home.reviews.next")} />
         </div>
       </div>
     </section>

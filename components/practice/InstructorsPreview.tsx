@@ -1,10 +1,11 @@
 "use client";
 
-import Link from "next/link";
 import { useRef } from "react";
 import { Reveal } from "../Reveal";
 import { SectionLabel } from "../SectionLabel";
-import { instructors, type Instructor } from "@/lib/instructors/data";
+import { EditableText } from "../content/EditableText";
+import { instructors as staticInstructors, type Instructor } from "@/lib/instructors/data";
+import { L, useT } from "@/lib/i18n/client";
 
 const avatarColors: Record<Instructor["avatarColor"], string> = {
   indigo: "bg-indigo-500/20 text-indigo-200",
@@ -14,8 +15,19 @@ const avatarColors: Record<Instructor["avatarColor"], string> = {
   rose: "bg-rose-500/20 text-rose-200",
 };
 
-export function InstructorsPreview() {
+type Props = {
+  hiddenIds?: string[];
+  extraInstructors?: Instructor[];
+};
+
+export function InstructorsPreview({ hiddenIds = [], extraInstructors = [] }: Props) {
+  const { t } = useT();
   const scrollRef = useRef<HTMLDivElement>(null);
+  const hidden = new Set(hiddenIds);
+  const instructors: Instructor[] = [
+    ...extraInstructors.filter((i) => !hidden.has(i.id)),
+    ...staticInstructors.filter((i) => !hidden.has(i.id)),
+  ];
 
   function scroll(dir: "left" | "right") {
     const el = scrollRef.current;
@@ -30,22 +42,27 @@ export function InstructorsPreview() {
       <div className="mx-auto max-w-7xl px-6 lg:px-10 relative">
         <div className="flex items-end justify-between gap-6 mb-10">
           <Reveal className="flex-1">
-            <SectionLabel num="01">Инструкторы</SectionLabel>
+            <SectionLabel num="01">
+              <EditableText storageKey="practice.instructors.section.label">{t("practice.instructors.section.label")}</EditableText>
+            </SectionLabel>
             <h2 className="text-[28px] sm:text-[34px] font-medium text-white tracking-[-0.015em] max-w-[540px]">
-              С кем будешь <span className="text-orange">ездить</span>
+              <EditableText storageKey="practice.instructors.title.lead">{t("practice.instructors.title.lead")}</EditableText>{" "}
+              <span className="text-orange">
+                <EditableText storageKey="practice.instructors.title.accent">{t("practice.instructors.title.accent")}</EditableText>
+              </span>
             </h2>
             <p className="text-[14px] text-muted-on-navy leading-[1.65] mt-3 max-w-[480px]">
-              Все наши инструкторы — лицензированные, с опытом 6+ лет.{" "}
-              <Link href="/instructors" className="text-orange-soft hover:text-orange transition-colors underline underline-offset-2">
-                Полная страница
-              </Link>
+              <EditableText storageKey="practice.instructors.subtitle" multiline>{t("practice.instructors.subtitle")}</EditableText>{" "}
+              <L href="/instructors" className="text-orange-soft hover:text-orange transition-colors underline underline-offset-2">
+                {t("practice.instructors.fullPage")}
+              </L>
               .
             </p>
           </Reveal>
 
           <Reveal delay={80} className="hidden sm:flex gap-2 shrink-0 pb-1">
-            <ArrowButton dir="left" onClick={() => scroll("left")} />
-            <ArrowButton dir="right" onClick={() => scroll("right")} />
+            <ArrowButton dir="left" onClick={() => scroll("left")} label={t("common.prev")} />
+            <ArrowButton dir="right" onClick={() => scroll("right")} label={t("common.next")} />
           </Reveal>
         </div>
 
@@ -56,18 +73,34 @@ export function InstructorsPreview() {
           >
             <div className="flex gap-3">
               {instructors.map((inst) => (
-                <Link
+                <a
                   key={inst.id}
-                  href={`/instructors/${inst.id}`}
-                  className="group snap-start shrink-0 w-[240px] flex items-center gap-3.5 p-4 bg-white/[0.03] border border-white/10 rounded-xl hover:bg-white/[0.05] hover:border-white/20 transition-all duration-300"
+                  href={`#book-${inst.id}`}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    window.history.replaceState(null, "", `#book-${inst.id}`);
+                    window.dispatchEvent(new HashChangeEvent("hashchange"));
+                    document
+                      .getElementById("booking")
+                      ?.scrollIntoView({ behavior: "smooth", block: "start" });
+                  }}
+                  className="group snap-start shrink-0 w-[240px] flex items-center gap-3.5 p-4 bg-white/[0.03] border border-white/10 rounded-xl hover:bg-white/[0.05] hover:border-white/20 transition-all duration-300 cursor-pointer"
                 >
-                  <span
-                    className={`shrink-0 w-14 h-14 rounded-full grid place-items-center text-[15px] font-medium ${
-                      avatarColors[inst.avatarColor]
-                    }`}
-                  >
-                    {inst.initials}
-                  </span>
+                  {inst.avatarUrl ? (
+                    <img
+                      src={inst.avatarUrl}
+                      alt={inst.name}
+                      className="shrink-0 w-14 h-14 rounded-full object-cover"
+                    />
+                  ) : (
+                    <span
+                      className={`shrink-0 w-14 h-14 rounded-full grid place-items-center text-[15px] font-medium ${
+                        avatarColors[inst.avatarColor]
+                      }`}
+                    >
+                      {inst.initials}
+                    </span>
+                  )}
                   <div className="flex-1 min-w-0">
                     <div className="text-[14px] font-medium text-white truncate group-hover:text-orange-soft transition-colors">
                       {inst.name.split(" ")[0]} {inst.name.split(" ")[1]?.[0]}.
@@ -83,7 +116,7 @@ export function InstructorsPreview() {
                       {inst.languages.join(" · ")}
                     </div>
                   </div>
-                </Link>
+                </a>
               ))}
             </div>
           </div>
@@ -93,11 +126,11 @@ export function InstructorsPreview() {
   );
 }
 
-function ArrowButton({ dir, onClick }: { dir: "left" | "right"; onClick: () => void }) {
+function ArrowButton({ dir, onClick, label }: { dir: "left" | "right"; onClick: () => void; label: string }) {
   return (
     <button
       onClick={onClick}
-      aria-label={dir === "left" ? "Предыдущие" : "Следующие"}
+      aria-label={label}
       className="w-10 h-10 rounded-full bg-white/[0.04] border border-white/15 text-white grid place-items-center transition-all hover:bg-white/[0.08] hover:border-white/30 hover:text-orange-soft active:scale-95"
     >
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">

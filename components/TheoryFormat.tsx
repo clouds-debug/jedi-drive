@@ -1,10 +1,13 @@
+"use client";
+
 import { Reveal } from "./Reveal";
 import { SectionLabel } from "./SectionLabel";
+import { EditableText } from "./content/EditableText";
+import { useT } from "@/lib/i18n/client";
 
 const features = [
   {
-    title: "Zoom + интерактивная доска",
-    desc: "Преподаватель ведёт занятие в реальном времени, разбирает схемы и билеты прямо на экране.",
+    key: "zoom",
     icon: (
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6">
         <rect x="2" y="4" width="20" height="13" rx="2" />
@@ -14,8 +17,7 @@ const features = [
     ),
   },
   {
-    title: "Группа до 8 человек",
-    desc: "Маленькая группа — каждый успевает задать вопрос. Можно и индивидуально, если хочется свой темп.",
+    key: "group",
     icon: (
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6">
         <circle cx="9" cy="9" r="3" />
@@ -24,8 +26,7 @@ const features = [
     ),
   },
   {
-    title: "Запись каждого занятия",
-    desc: "Пропустил или не понял — пересмотри. Записи остаются у тебя до сдачи экзамена.",
+    key: "record",
     icon: (
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6">
         <circle cx="12" cy="12" r="9" />
@@ -34,8 +35,7 @@ const features = [
     ),
   },
   {
-    title: "Чат с преподавателем",
-    desc: "Telegram-канал с группой и куратором. Вопросы можно задавать в любое время.",
+    key: "chat",
     icon: (
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6">
         <path d="M21 12a8 8 0 11-3.5-6.6L21 4l-1.4 3.5A7.96 7.96 0 0121 12z" />
@@ -44,8 +44,7 @@ const features = [
     ),
   },
   {
-    title: "Симулятор билетов МВД",
-    desc: "Тренируйся на наших билетах — те же вопросы и интерфейс, что и на реальном экзамене.",
+    key: "sim",
     icon: (
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6">
         <rect x="3" y="4" width="18" height="16" rx="2" />
@@ -54,8 +53,7 @@ const features = [
     ),
   },
   {
-    title: "Домашние задания",
-    desc: "После каждого занятия — мини-задание на 15 минут. Закрепляешь тему, не забывая на следующей неделе.",
+    key: "hw",
     icon: (
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6">
         <path d="M14 3H6a2 2 0 00-2 2v14a2 2 0 002 2h12a2 2 0 002-2V9z" />
@@ -66,6 +64,7 @@ const features = [
 ];
 
 export function TheoryFormat() {
+  const { t } = useT();
   return (
     <section className="bg-navy py-20 relative overflow-hidden">
       <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-orange/30 to-transparent" aria-hidden />
@@ -73,33 +72,46 @@ export function TheoryFormat() {
 
       <div className="mx-auto max-w-7xl px-6 lg:px-10 relative">
         <Reveal>
-          <SectionLabel num="03">Формат</SectionLabel>
+          <SectionLabel num="03">
+            <EditableText storageKey="theory.format.section.label">{t("theory.format.section.label")}</EditableText>
+          </SectionLabel>
           <h2 className="text-[28px] sm:text-[34px] font-medium text-white tracking-[-0.015em] mb-3 max-w-[540px]">
-            Как проходит <span className="text-orange">онлайн</span>
+            <EditableText storageKey="theory.format.title.lead">{t("theory.format.title.lead")}</EditableText>{" "}
+            <span className="text-orange">
+              <EditableText storageKey="theory.format.title.accent">{t("theory.format.title.accent")}</EditableText>
+            </span>
           </h2>
           <p className="text-[14px] text-muted-on-navy leading-[1.65] mb-12 max-w-[520px]">
-            Никаких офисов и пыльных кабинетов. Всё что нужно — ноутбук или телефон с интернетом.
+            <EditableText storageKey="theory.format.subtitle" multiline>{t("theory.format.subtitle")}</EditableText>
           </p>
         </Reveal>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-          {features.map((f, i) => (
-            <Reveal key={f.title} delay={i * 80}>
-              <div className="relative bg-white/[0.03] border border-white/10 border-l-[3px] border-l-orange rounded-[var(--radius-card)] p-6 h-full overflow-hidden transition-all duration-300 hover:bg-white/[0.05] hover:border-white/20 hover:-translate-y-1">
-                <div className="absolute -right-12 -top-12 w-44 h-44 bg-orange/[0.10] rounded-full blur-[60px] pointer-events-none" aria-hidden />
+          {features.map((f, i) => {
+            const titleKey = `theory.format.${f.key}.title`;
+            const descKey = `theory.format.${f.key}.desc`;
+            return (
+              <Reveal key={f.key} delay={i * 80}>
+                <div className="relative bg-white/[0.03] border border-white/10 border-l-[3px] border-l-orange rounded-[var(--radius-card)] p-6 h-full overflow-hidden transition-all duration-300 hover:bg-white/[0.05] hover:border-white/20 hover:-translate-y-1">
+                  <div className="absolute -right-12 -top-12 w-44 h-44 bg-orange/[0.10] rounded-full blur-[60px] pointer-events-none" aria-hidden />
 
-                <div className="relative flex items-start gap-4">
-                  <span className="w-12 h-12 rounded-[10px] bg-orange/15 grid place-items-center text-orange-soft shrink-0">
-                    {f.icon}
-                  </span>
-                  <div>
-                    <div className="text-[16px] font-medium text-white mb-1.5">{f.title}</div>
-                    <p className="text-[13px] text-muted-on-navy leading-[1.6]">{f.desc}</p>
+                  <div className="relative flex items-start gap-4">
+                    <span className="w-12 h-12 rounded-[10px] bg-orange/15 grid place-items-center text-orange-soft shrink-0">
+                      {f.icon}
+                    </span>
+                    <div>
+                      <div className="text-[16px] font-medium text-white mb-1.5">
+                        <EditableText storageKey={titleKey}>{t(titleKey)}</EditableText>
+                      </div>
+                      <p className="text-[13px] text-muted-on-navy leading-[1.6]">
+                        <EditableText storageKey={descKey} multiline>{t(descKey)}</EditableText>
+                      </p>
+                    </div>
                   </div>
                 </div>
-              </div>
-            </Reveal>
-          ))}
+              </Reveal>
+            );
+          })}
         </div>
       </div>
     </section>

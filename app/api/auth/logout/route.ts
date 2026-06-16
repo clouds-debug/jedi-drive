@@ -1,0 +1,11 @@
+import { NextResponse } from "next/server";
+import { clearSessionCookie, destroySession, readSession } from "@/lib/auth/session";
+
+export const runtime = "nodejs";
+
+export async function POST() {
+  const session = await readSession();
+  if (session) await destroySession(session.sessionId);
+  await clearSessionCookie();
+  return NextResponse.json({ ok: true });
+}

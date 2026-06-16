@@ -8,6 +8,9 @@ import { TheoryProgram } from "@/components/TheoryProgram";
 import { TheoryFormat } from "@/components/TheoryFormat";
 import { TheoryPricing } from "@/components/TheoryPricing";
 import { TheoryEnroll } from "@/components/TheoryEnroll";
+import { EditableText } from "@/components/content/EditableText";
+import { readSession } from "@/lib/auth/session";
+import { getT } from "@/lib/i18n/server";
 
 export const metadata: Metadata = {
   title: "Запись на теорию — Jedi Drive",
@@ -15,7 +18,12 @@ export const metadata: Metadata = {
     "Теория для категории B. 16 онлайн-занятий в группе до 8 человек или индивидуально. Потоки на русском и грузинском.",
 };
 
-export default function TheoryPage() {
+export const dynamic = "force-dynamic";
+
+export default async function TheoryPage() {
+  const session = await readSession();
+  const isAuthed = session !== null;
+  const { t } = await getT();
   return (
     <>
       <Nav />
@@ -25,15 +33,20 @@ export default function TheoryPage() {
 
           <div className="mx-auto max-w-7xl px-6 lg:px-10 relative">
             <Reveal>
-              <SectionLabel num="01">Расписание</SectionLabel>
+              <SectionLabel num="01">
+                <EditableText storageKey="theory.hero.section.label">{t("theory.hero.section.label")}</EditableText>
+              </SectionLabel>
               <h1 className="hero-rise text-[32px] sm:text-[44px] lg:text-[52px] font-medium text-white tracking-[-0.02em] leading-[1.05] mb-4 max-w-[680px]">
-                Выбери удобный <span className="text-orange">поток</span>
+                <EditableText storageKey="theory.hero.title.lead">{t("theory.hero.title.lead")}</EditableText>{" "}
+                <span className="text-orange">
+                  <EditableText storageKey="theory.hero.title.accent">{t("theory.hero.title.accent")}</EditableText>
+                </span>
               </h1>
               <p
                 className="hero-rise text-[14.5px] sm:text-[15.5px] text-muted-on-navy leading-[1.65] mb-12 max-w-[540px]"
                 style={{ animationDelay: "80ms" }}
               >
-                Потоки стартуют каждые 4-5 недель. Можно записаться в текущий, если есть места, или забронировать следующий — мы откроем его в первую очередь для тех, кто бронировал заранее.
+                <EditableText storageKey="theory.hero.subtitle" multiline>{t("theory.hero.subtitle")}</EditableText>
               </p>
             </Reveal>
 
@@ -46,7 +59,7 @@ export default function TheoryPage() {
         <TheoryProgram />
         <TheoryFormat />
         <TheoryPricing />
-        <TheoryEnroll />
+        <TheoryEnroll isAuthed={isAuthed} />
       </main>
       <Footer />
     </>

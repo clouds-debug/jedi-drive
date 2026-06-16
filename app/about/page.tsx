@@ -6,6 +6,8 @@ import { FounderCard } from "@/components/about/FounderCard";
 import { AboutStats } from "@/components/about/AboutStats";
 import { AboutLocation } from "@/components/about/AboutLocation";
 import { AboutSocials } from "@/components/about/AboutSocials";
+import { EditableText } from "@/components/content/EditableText";
+import { getT } from "@/lib/i18n/server";
 
 export const metadata: Metadata = {
   title: "О школе — Jedi Drive",
@@ -13,7 +15,10 @@ export const metadata: Metadata = {
     "Jedi Drive — автошкола в Тбилиси, основанная Анри в 2023 году. Команда из 9 инструкторов, 92% сдачи с первого раза.",
 };
 
-export default function AboutPage() {
+export const dynamic = "force-dynamic";
+
+export default async function AboutPage() {
+  const { t } = await getT();
   return (
     <>
       <Nav />
@@ -24,16 +29,19 @@ export default function AboutPage() {
           <div className="mx-auto max-w-7xl px-6 lg:px-10 relative">
             <Reveal>
               <p className="hero-rise text-[12px] text-orange-soft tracking-[0.1em] uppercase mb-4">
-                О школе · Тбилиси
+                <EditableText storageKey="about.hero.kicker">{t("about.hero.kicker")}</EditableText>
               </p>
               <h1 className="hero-rise text-[32px] sm:text-[44px] lg:text-[52px] font-medium text-white tracking-[-0.02em] leading-[1.05] mb-4 max-w-[680px]">
-                Маленькая школа с <span className="text-orange">большим подходом</span>
+                <EditableText storageKey="about.hero.title.lead">{t("about.hero.title.lead")}</EditableText>{" "}
+                <span className="text-orange">
+                  <EditableText storageKey="about.hero.title.accent">{t("about.hero.title.accent")}</EditableText>
+                </span>
               </h1>
               <p
                 className="hero-rise text-[14.5px] sm:text-[15.5px] text-muted-on-navy leading-[1.65] mb-2 max-w-[560px]"
                 style={{ animationDelay: "80ms" }}
               >
-                Jedi Drive основана в 2023 году в Тбилиси. Мы не претендуем на размер сетевых школ — наоборот, ставим качество выше масштаба. Каждого инструктора выбираем сами, и каждого ученика — тоже знаем по имени.
+                <EditableText storageKey="about.hero.subtitle" multiline>{t("about.hero.subtitle")}</EditableText>
               </p>
             </Reveal>
           </div>

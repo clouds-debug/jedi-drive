@@ -1,7 +1,10 @@
-import Link from "next/link";
+"use client";
+
 import { Reveal } from "./Reveal";
+import { L, useT } from "@/lib/i18n/client";
 
 export function FinalCta() {
+  const { t } = useT();
   return (
     <section className="bg-navy py-20 relative overflow-hidden">
       <div className="absolute -right-12 -bottom-12 opacity-[0.07] pointer-events-none" aria-hidden>
@@ -19,20 +22,20 @@ export function FinalCta() {
         <Reveal>
           <div className="max-w-[520px]">
             <h2 className="text-[32px] sm:text-[40px] font-medium text-white tracking-[-0.01em] leading-[1.1] mb-3">
-              Готов сесть <span className="text-orange">за руль?</span>
+              {t("home.cta.title.lead")} <span className="text-orange">{t("home.cta.title.accent")}</span>
             </h2>
             <p className="text-[14.5px] text-muted-on-navy leading-[1.6] mb-7 max-w-[420px]">
-              Пробный урок 30 минут. Без обязательств — посмотришь как у нас, потом решишь.
+              {t("home.cta.subtitle")}
             </p>
-            <Link
+            <L
               href="/services/practice"
               className="inline-flex items-center gap-2 bg-orange text-white px-6 py-3.5 rounded-[var(--radius-btn)] text-[14px] font-medium transition-all hover:bg-[#EA670F] hover:translate-x-1"
             >
-              Записаться на пробный
+              {t("home.cta.button")}
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <path d="M5 12h14M13 6l6 6-6 6" />
               </svg>
-            </Link>
+            </L>
           </div>
         </Reveal>
       </div>

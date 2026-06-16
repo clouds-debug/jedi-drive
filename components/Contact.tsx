@@ -3,10 +3,14 @@
 import { useState } from "react";
 import { Reveal } from "./Reveal";
 import { SectionLabel } from "./SectionLabel";
+import { EditableText } from "./content/EditableText";
+import { useContentCtx, useContentValue } from "./content/ContentProvider";
+import { useT } from "@/lib/i18n/client";
 
 type Status = "idle" | "sending" | "sent" | "error";
 
 export function Contact() {
+  const { t } = useT();
   const [name, setName] = useState("");
   const [contact, setContact] = useState("");
   const [question, setQuestion] = useState("");
@@ -31,20 +35,27 @@ export function Contact() {
 
           <div className="lg:col-span-5">
             <Reveal>
-              <SectionLabel num="04">Обратная связь</SectionLabel>
+              <SectionLabel num="04">
+                <EditableText storageKey="home.contact.section.label">{t("home.contact.section.label")}</EditableText>
+              </SectionLabel>
               <h2 className="text-[30px] sm:text-[36px] font-medium text-white tracking-[-0.01em] leading-[1.1] mb-4">
-                Остались <span className="text-orange">вопросы?</span>
+                <EditableText storageKey="home.contact.section.title.lead">{t("home.contact.section.title.lead")}</EditableText>{" "}
+                <span className="text-orange">
+                  <EditableText storageKey="home.contact.section.title.accent">{t("home.contact.section.title.accent")}</EditableText>
+                </span>
               </h2>
               <p className="text-[14.5px] text-muted-on-navy leading-[1.65] mb-8 max-w-[420px]">
-                Напиши — расскажем про услуги, поможем выбрать формат. Отвечаем в рабочее время в течение часа.
+                <EditableText storageKey="home.contact.section.subtitle" multiline>{t("home.contact.section.subtitle")}</EditableText>
               </p>
             </Reveal>
 
             <Reveal delay={100}>
               <ul className="space-y-3.5">
                 <ContactLink
-                  href="tel:+995500000000"
-                  label="Телефон"
+                  defaultHref="tel:+995500000000"
+                  labelKey="home.contact.phone.label"
+                  label={t("home.contact.phone.label")}
+                  valueKey="home.contact.phone.value"
                   value="+995 500 00 00 00"
                   icon={
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7">
@@ -53,8 +64,11 @@ export function Contact() {
                   }
                 />
                 <ContactLink
-                  href="https://t.me/jedidrive"
-                  label="Telegram"
+                  hrefKey="home.contact.telegram.href"
+                  defaultHref="https://t.me/jedidrive"
+                  labelKey="home.contact.telegram.label"
+                  label={t("home.contact.telegram.label")}
+                  valueKey="home.contact.telegram.value"
                   value="@jedidrive"
                   icon={
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
@@ -63,13 +77,28 @@ export function Contact() {
                   }
                 />
                 <ContactLink
-                  href="mailto:hello@jedidrive.ge"
-                  label="Email"
+                  defaultHref="mailto:hello@jedidrive.ge"
+                  labelKey="home.contact.email.label"
+                  label={t("home.contact.email.label")}
+                  valueKey="home.contact.email.value"
                   value="hello@jedidrive.ge"
                   icon={
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7">
                       <rect x="3" y="5" width="18" height="14" rx="2" />
                       <path d="M3 7l9 6 9-6" />
+                    </svg>
+                  }
+                />
+                <ContactLink
+                  hrefKey="home.contact.whatsapp.href"
+                  defaultHref="https://wa.me/995500000000"
+                  labelKey="home.contact.whatsapp.label"
+                  label={t("home.contact.whatsapp.label")}
+                  valueKey="home.contact.whatsapp.value"
+                  value="+995 500 00 00 00"
+                  icon={
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M19.05 4.92A10 10 0 002.6 16.8l-1.5 5.5 5.6-1.47A10 10 0 1019.05 4.92zM12 20.4a8.4 8.4 0 01-4.27-1.17l-.3-.18-3.32.87.88-3.24-.2-.32A8.4 8.4 0 1112 20.4zm4.6-6.3c-.25-.13-1.49-.74-1.72-.82-.23-.08-.4-.13-.57.13-.17.25-.65.82-.8.99-.15.17-.3.19-.55.06-.25-.13-1.06-.39-2.02-1.25-.74-.66-1.24-1.48-1.39-1.73-.15-.25-.02-.39.11-.51.11-.11.25-.3.38-.45.13-.15.17-.25.25-.42.08-.17.04-.32-.02-.45-.06-.13-.57-1.37-.78-1.87-.2-.49-.4-.42-.56-.43h-.48c-.17 0-.43.06-.66.31-.23.25-.86.85-.86 2.07 0 1.22.89 2.4 1.01 2.57.13.17 1.74 2.66 4.22 3.73.59.25 1.05.41 1.41.52.59.19 1.13.16 1.56.1.48-.07 1.49-.61 1.7-1.2.21-.59.21-1.09.15-1.2-.06-.11-.23-.17-.48-.3z" />
                     </svg>
                   }
                 />
@@ -87,37 +116,37 @@ export function Contact() {
                   <>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
                       <Field
-                        label="Как тебя зовут"
+                        label={t("home.contact.form.name.label")}
                         value={name}
                         onChange={setName}
-                        placeholder="Имя"
+                        placeholder={t("home.contact.form.name.placeholder")}
                         autoComplete="name"
                       />
                       <Field
-                        label="Телефон или email"
+                        label={t("home.contact.form.contact.label")}
                         value={contact}
                         onChange={setContact}
-                        placeholder="+995 / @ / e-mail"
+                        placeholder={t("home.contact.form.contact.placeholder")}
                         autoComplete="tel"
                       />
                     </div>
                     <Field
-                      label="Вопрос"
+                      label={t("home.contact.form.question.label")}
                       value={question}
                       onChange={setQuestion}
-                      placeholder="Что хочешь узнать? Например: можно ли начать с практики, не проходя теорию?"
+                      placeholder={t("home.contact.form.question.placeholder")}
                       textarea
                     />
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mt-5">
                       <p className="text-[11.5px] text-muted-on-navy/80 leading-[1.55] max-w-[280px]">
-                        Отправляя, ты соглашаешься с обработкой контактных данных для ответа.
+                        {t("home.contact.form.consent")}
                       </p>
                       <button
                         type="submit"
                         disabled={status === "sending"}
                         className="inline-flex items-center justify-center gap-2 bg-orange text-white px-6 py-3 rounded-[var(--radius-btn)] text-[14px] font-medium transition-all hover:bg-[#EA670F] hover:translate-x-0.5 disabled:opacity-60 disabled:cursor-not-allowed"
                       >
-                        {status === "sending" ? "Отправляем…" : "Отправить"}
+                        {status === "sending" ? t("home.contact.form.sending") : t("home.contact.form.submit")}
                         {status !== "sending" && (
                           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
                             <path d="M5 12h14M13 6l6 6-6 6" />
@@ -133,9 +162,9 @@ export function Contact() {
                         <path d="M5 12l5 5L20 6" />
                       </svg>
                     </div>
-                    <div className="text-white text-[18px] font-medium mb-1.5">Спасибо, {name || "получили"}!</div>
+                    <div className="text-white text-[18px] font-medium mb-1.5">{t("home.contact.form.success.title")}, {name || t("home.contact.form.success.title.fallback")}!</div>
                     <p className="text-[13.5px] text-muted-on-navy max-w-[340px] mx-auto leading-[1.6]">
-                      Свяжемся с тобой в течение часа в рабочее время.
+                      {t("home.contact.form.success.desc")}
                     </p>
                   </div>
                 )}
@@ -149,30 +178,50 @@ export function Contact() {
 }
 
 function ContactLink({
-  href,
+  hrefKey,
+  defaultHref,
+  labelKey,
   label,
+  valueKey,
   value,
   icon,
 }: {
-  href: string;
+  hrefKey?: string;
+  defaultHref: string;
+  labelKey: string;
   label: string;
+  valueKey: string;
   value: string;
   icon: React.ReactNode;
 }) {
+  const { t } = useT();
+  const href = useContentValue(hrefKey ?? "", defaultHref);
+  const { isEditor } = useContentCtx();
   return (
     <li>
-      <a
-        href={href}
-        className="group flex items-center gap-3.5 text-white transition-transform hover:translate-x-0.5"
-      >
-        <span className="w-10 h-10 rounded-[var(--radius-chip)] bg-white/[0.07] border border-white/10 grid place-items-center text-orange-soft group-hover:bg-orange/15 group-hover:border-orange/30 transition-colors">
-          {icon}
-        </span>
-        <span>
-          <span className="block text-[11px] text-muted-on-navy tracking-[0.08em] uppercase">{label}</span>
-          <span className="block text-[14.5px] text-white">{value}</span>
-        </span>
-      </a>
+      <div className="group/contact flex items-center gap-3.5 flex-wrap">
+        <a
+          href={href}
+          className="group/link flex items-center gap-3.5 text-white transition-transform hover:translate-x-0.5"
+        >
+          <span className="w-10 h-10 rounded-[var(--radius-chip)] bg-white/[0.07] border border-white/10 grid place-items-center text-orange-soft group-hover/link:bg-orange/15 group-hover/link:border-orange/30 transition-colors">
+            {icon}
+          </span>
+          <span>
+            <span className="block text-[11px] text-muted-on-navy tracking-[0.08em] uppercase">
+              <EditableText storageKey={labelKey}>{label}</EditableText>
+            </span>
+            <span className="block text-[14.5px] text-white">
+              <EditableText storageKey={valueKey}>{value}</EditableText>
+            </span>
+          </span>
+        </a>
+        {isEditor && hrefKey && (
+          <span className="basis-full text-[11px] text-muted-on-navy/80 font-mono break-all">
+            {t("home.contact.editor.link")}: <EditableText storageKey={hrefKey}>{defaultHref}</EditableText>
+          </span>
+        )}
+      </div>
     </li>
   );
 }

@@ -3,26 +3,17 @@
 import { useEffect, useState } from "react";
 import { Reveal } from "./Reveal";
 import { SectionLabel } from "./SectionLabel";
+import { EnrollLoginGate } from "./EnrollLoginGate";
+import { EditableText } from "./content/EditableText";
+import { L, useT } from "@/lib/i18n/client";
 
-const streamOptions = [
-  { value: "27", label: "Поток №27 · 11 марта (текущий)" },
-  { value: "28", label: "Поток №28 · 15 апреля (ru)" },
-  { value: "29", label: "Поток №29 · 20 мая (ge)" },
-  { value: "any", label: "Подобрать удобный" },
-];
-
-const formatOptions = [
-  { value: "group", label: "Группа онлайн" },
-  { value: "solo", label: "Индивидуально" },
-];
-
-export function TheoryEnroll() {
-  const [name, setName] = useState("");
-  const [contact, setContact] = useState("");
-  const [stream, setStream] = useState("27");
+export function TheoryEnroll({ isAuthed }: { isAuthed: boolean }) {
+  const { t } = useT();
   const [format, setFormat] = useState("group");
   const [comment, setComment] = useState("");
   const [sent, setSent] = useState(false);
+  const [pending, setPending] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     function applyHash() {
@@ -38,11 +29,33 @@ export function TheoryEnroll() {
     return () => window.removeEventListener("hashchange", applyHash);
   }, []);
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!name.trim() || !contact.trim()) return;
-    setSent(true);
+    setPending(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/enroll/theory", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ format, comment }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        setError(data?.error ?? t("theory.enroll.error.generic"));
+        return;
+      }
+      setSent(true);
+    } catch {
+      setError(t("theory.enroll.error.network"));
+    } finally {
+      setPending(false);
+    }
   }
+
+  const formatOptions = [
+    { value: "group", label: t("theory.enroll.format.group") },
+    { value: "solo", label: t("theory.enroll.format.solo") },
+  ];
 
   return (
     <section id="enroll" className="bg-navy py-20 relative overflow-hidden">
@@ -54,91 +67,105 @@ export function TheoryEnroll() {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-14">
           <div className="lg:col-span-5">
             <Reveal>
-              <SectionLabel num="05">Запись</SectionLabel>
+              <SectionLabel num="05">
+                <EditableText storageKey="theory.enroll.section.label">{t("theory.enroll.section.label")}</EditableText>
+              </SectionLabel>
               <h2 className="text-[28px] sm:text-[36px] font-medium text-white tracking-[-0.015em] mb-4 max-w-[480px] leading-[1.1]">
-                Закрепи <span className="text-orange">место</span>
+                <EditableText storageKey="theory.enroll.title.lead">{t("theory.enroll.title.lead")}</EditableText>{" "}
+                <span className="text-orange">
+                  <EditableText storageKey="theory.enroll.title.accent">{t("theory.enroll.title.accent")}</EditableText>
+                </span>
               </h2>
               <p className="text-[14.5px] text-muted-on-navy leading-[1.65] mb-8 max-w-[420px]">
-                Оставь заявку — перезвоним в течение часа, ответим на вопросы, поможем выбрать поток и формат.
+                <EditableText storageKey="theory.enroll.subtitle" multiline>{t("theory.enroll.subtitle")}</EditableText>
               </p>
             </Reveal>
 
             <Reveal delay={100}>
               <ul className="space-y-3.5">
-                <li className="flex items-start gap-3 text-[13.5px] text-muted-on-navy">
-                  <Check />
-                  <span>Подберём формат и поток под твой график</span>
-                </li>
-                <li className="flex items-start gap-3 text-[13.5px] text-muted-on-navy">
-                  <Check />
-                  <span>Заявка ни к чему не обязывает — сначала расскажем подробнее</span>
-                </li>
-                <li className="flex items-start gap-3 text-[13.5px] text-muted-on-navy">
-                  <Check />
-                  <span>Можно перенести занятия если что-то поменялось</span>
-                </li>
+                {[1, 2, 3].map((n) => (
+                  <li key={n} className="flex items-start gap-3 text-[13.5px] text-muted-on-navy">
+                    <Check />
+                    <span><EditableText storageKey={`theory.enroll.bullet.${n}`} multiline>{t(`theory.enroll.bullet.${n}`)}</EditableText></span>
+                  </li>
+                ))}
               </ul>
             </Reveal>
           </div>
 
           <div className="lg:col-span-7">
             <Reveal delay={150}>
-              <form
-                onSubmit={handleSubmit}
-                className="bg-white/[0.04] border border-white/10 rounded-[var(--radius-card)] p-6 sm:p-7 backdrop-blur-sm"
-              >
-                {!sent ? (
-                  <>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
-                      <Field label="Имя" value={name} onChange={setName} placeholder="Как тебя зовут" />
-                      <Field label="Телефон или email" value={contact} onChange={setContact} placeholder="+995 / @ / e-mail" />
-                    </div>
+              {!isAuthed ? (
+                <EnrollLoginGate
+                  title={t("theory.enroll.login.title")}
+                  next="/services/theory#enroll"
+                />
+              ) : (
+                <form
+                  onSubmit={handleSubmit}
+                  className="bg-white/[0.04] border border-white/10 rounded-[var(--radius-card)] p-6 sm:p-7 backdrop-blur-sm"
+                >
+                  {!sent ? (
+                    <>
+                      <div className="mb-3">
+                        <Select label={t("theory.enroll.format.label")} value={format} onChange={setFormat} options={formatOptions} />
+                      </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
-                      <Select label="Поток" value={stream} onChange={setStream} options={streamOptions} />
-                      <Select label="Формат" value={format} onChange={setFormat} options={formatOptions} />
-                    </div>
+                      <Field
+                        label={t("theory.enroll.comment.label")}
+                        value={comment}
+                        onChange={setComment}
+                        placeholder={t("theory.enroll.comment.placeholder")}
+                        textarea
+                      />
 
-                    <Field
-                      label="Комментарий"
-                      value={comment}
-                      onChange={setComment}
-                      placeholder="Что-то ещё хочешь сказать?"
-                      textarea
-                    />
+                      {error && (
+                        <div className="mt-4 text-[12.5px] text-orange-soft border border-orange/30 bg-orange/[0.06] rounded-lg px-3 py-2">
+                          {error}
+                        </div>
+                      )}
 
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mt-5">
-                      <p className="text-[11.5px] text-muted-on-navy/80 leading-[1.55] max-w-[280px]">
-                        Отправляя, ты соглашаешься с обработкой контактных данных для ответа.
-                      </p>
-                      <button
-                        type="submit"
-                        className="inline-flex items-center justify-center gap-2 bg-orange text-white px-6 py-3 rounded-[var(--radius-btn)] text-[14px] font-medium transition-all hover:bg-[#EA670F] hover:translate-x-0.5"
-                      >
-                        Отправить заявку
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
-                          <path d="M5 12h14M13 6l6 6-6 6" />
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mt-5">
+                        <p className="text-[11.5px] text-muted-on-navy/80 leading-[1.55] max-w-[280px]">
+                          {t("theory.enroll.note")}
+                        </p>
+                        <button
+                          type="submit"
+                          disabled={pending}
+                          className="inline-flex items-center justify-center gap-2 bg-orange text-white px-6 py-3 rounded-[var(--radius-btn)] text-[14px] font-medium transition-all hover:bg-[#EA670F] hover:translate-x-0.5 disabled:opacity-60 disabled:cursor-not-allowed"
+                        >
+                          {pending ? t("theory.enroll.sending") : t("theory.enroll.submit")}
+                          {!pending && (
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
+                              <path d="M5 12h14M13 6l6 6-6 6" />
+                            </svg>
+                          )}
+                        </button>
+                      </div>
+                    </>
+                  ) : (
+                    <div className="py-8 text-center">
+                      <div className="mx-auto w-14 h-14 rounded-full bg-orange/15 grid place-items-center mb-5">
+                        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#F97316" strokeWidth="2">
+                          <path d="M5 12l5 5L20 6" />
                         </svg>
-                      </button>
+                      </div>
+                      <div className="text-white text-[20px] font-medium mb-2">
+                        {t("theory.enroll.success.title")}
+                      </div>
+                      <p className="text-[14px] text-muted-on-navy max-w-[380px] mx-auto leading-[1.6] mb-5">
+                        {t("theory.enroll.success.desc")}
+                      </p>
+                      <L
+                        href="/cabinet/lessons"
+                        className="inline-flex items-center gap-1.5 bg-white/[0.04] border border-white/15 hover:bg-white/[0.08] text-white text-[13px] px-4 py-2 rounded-lg transition-colors"
+                      >
+                        {t("theory.enroll.success.cta")}
+                      </L>
                     </div>
-                  </>
-                ) : (
-                  <div className="py-8 text-center">
-                    <div className="mx-auto w-14 h-14 rounded-full bg-orange/15 grid place-items-center mb-5">
-                      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#F97316" strokeWidth="2">
-                        <path d="M5 12l5 5L20 6" />
-                      </svg>
-                    </div>
-                    <div className="text-white text-[20px] font-medium mb-2">
-                      Заявка принята, {name || "ученик"}!
-                    </div>
-                    <p className="text-[14px] text-muted-on-navy max-w-[360px] mx-auto leading-[1.6]">
-                      Свяжемся с тобой в течение часа в рабочее время. Если срочно — телеграм{" "}
-                      <a href="https://t.me/jedidrive" className="text-orange-soft underline underline-offset-2">@jedidrive</a>.
-                    </p>
-                  </div>
-                )}
-              </form>
+                  )}
+                </form>
+              )}
             </Reveal>
           </div>
         </div>

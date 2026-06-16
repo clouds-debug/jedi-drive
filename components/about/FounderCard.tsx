@@ -1,16 +1,14 @@
+"use client";
+
 import { Reveal } from "../Reveal";
 import { SectionLabel } from "../SectionLabel";
+import { EditableText } from "../content/EditableText";
+import { useT } from "@/lib/i18n/client";
 
-const qualities = [
-  "Терпеливый",
-  "Спокойный",
-  "Методичный",
-  "Лояльный",
-  "Искренний",
-  "Внимательный к деталям",
-];
+const QUALITY_KEYS = ["0", "1", "2", "3", "4", "5"];
 
 export function FounderCard() {
+  const { t } = useT();
   return (
     <section className="bg-navy py-20 relative overflow-hidden">
       <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-orange/30 to-transparent" aria-hidden />
@@ -18,12 +16,17 @@ export function FounderCard() {
 
       <div className="mx-auto max-w-7xl px-6 lg:px-10 relative">
         <Reveal>
-          <SectionLabel num="01">Основатель</SectionLabel>
+          <SectionLabel num="01">
+            <EditableText storageKey="about.founder.section.label">{t("about.founder.section.label")}</EditableText>
+          </SectionLabel>
           <h2 className="text-[28px] sm:text-[34px] font-medium text-white tracking-[-0.015em] mb-3 max-w-[540px]">
-            Кто стоит за <span className="text-orange">Jedi Drive</span>
+            <EditableText storageKey="about.founder.title.lead">{t("about.founder.title.lead")}</EditableText>{" "}
+            <span className="text-orange">
+              <EditableText storageKey="about.founder.title.accent">{t("about.founder.title.accent")}</EditableText>
+            </span>
           </h2>
           <p className="text-[14px] text-muted-on-navy leading-[1.65] mb-12 max-w-[520px]">
-            Не сетевая франшиза и не семейный бизнес из 80-х. История гораздо проще — один молодой парень собрал команду.
+            <EditableText storageKey="about.founder.subtitle" multiline>{t("about.founder.subtitle")}</EditableText>
           </p>
         </Reveal>
 
@@ -36,45 +39,51 @@ export function FounderCard() {
               <div className="flex flex-col items-center lg:items-start">
                 <div className="relative w-[180px] h-[180px] rounded-full bg-gradient-to-br from-orange/40 via-orange/15 to-transparent grid place-items-center mb-5">
                   <div className="absolute inset-0 rounded-full border border-orange/30" />
-                  <span className="text-[64px] font-medium text-orange-soft leading-none tracking-tight">АН</span>
+                  <span className="text-[64px] font-medium text-orange-soft leading-none tracking-tight">
+                    <EditableText storageKey="about.founder.initials">{t("about.founder.initials")}</EditableText>
+                  </span>
                 </div>
 
                 <div className="grid grid-cols-3 lg:grid-cols-1 gap-3 w-full">
-                  <Stat label="Возраст" value="23" sub="года" />
-                  <Stat label="За рулём" value="5" sub="лет" />
-                  <Stat label="Обучает" value="3" sub="года" />
+                  <Stat statKey="age" />
+                  <Stat statKey="driving" />
+                  <Stat statKey="teaching" />
                 </div>
               </div>
 
               <div>
                 <div className="flex items-baseline gap-3 mb-1">
-                  <span className="text-[11px] text-orange-soft tracking-[0.16em] uppercase">Основатель и владелец</span>
+                  <span className="text-[11px] text-orange-soft tracking-[0.16em] uppercase">
+                    <EditableText storageKey="about.founder.role">{t("about.founder.role")}</EditableText>
+                  </span>
                 </div>
                 <h3 className="text-[36px] sm:text-[44px] font-medium text-white leading-tight tracking-[-0.02em] mb-4">
-                  Анри
+                  <EditableText storageKey="about.founder.name">{t("about.founder.name")}</EditableText>
                 </h3>
 
                 <div className="space-y-4 text-[14.5px] text-white/95 leading-[1.7] mb-7">
                   <p>
-                    Сам сел за руль в 18, прошёл путь от полной растерянности до уверенного водителя за 8 месяцев.
+                    <EditableText storageKey="about.founder.bio.1" multiline>{t("about.founder.bio.1")}</EditableText>
                   </p>
                   <p>
-                    В 2023 году запустил онлайн-обучение по теории — людям было дешевле и удобнее проходить ПДД из дома, чем ездить в офис. В 2025 году открыл свою площадку: после долгих поисков понял, что найти хороших инструкторов в Тбилиси непросто, поэтому собрал команду сам.
+                    <EditableText storageKey="about.founder.bio.2" multiline>{t("about.founder.bio.2")}</EditableText>
                   </p>
                   <p>
-                    Главное правило команды — терпение важнее результата. Лояльность к ученику, ясность объяснений, никакого давления.
+                    <EditableText storageKey="about.founder.bio.3" multiline>{t("about.founder.bio.3")}</EditableText>
                   </p>
                 </div>
 
                 <div>
-                  <div className="text-[11px] text-orange-soft tracking-[0.16em] uppercase mb-3">Качества</div>
+                  <div className="text-[11px] text-orange-soft tracking-[0.16em] uppercase mb-3">
+                    <EditableText storageKey="about.founder.qualities.label">{t("about.founder.qualities.label")}</EditableText>
+                  </div>
                   <div className="flex flex-wrap gap-2">
-                    {qualities.map((q) => (
+                    {QUALITY_KEYS.map((q) => (
                       <span
                         key={q}
                         className="bg-white/[0.05] border border-white/10 text-[12.5px] text-white px-3 py-1.5 rounded-full"
                       >
-                        {q}
+                        <EditableText storageKey={`about.founder.quality.${q}`}>{t(`about.founder.quality.${q}`)}</EditableText>
                       </span>
                     ))}
                   </div>
@@ -88,13 +97,21 @@ export function FounderCard() {
   );
 }
 
-function Stat({ label, value, sub }: { label: string; value: string; sub: string }) {
+function Stat({ statKey }: { statKey: string }) {
+  const { t } = useT();
+  const base = `about.founder.stat.${statKey}`;
   return (
     <div className="bg-white/[0.04] border border-white/10 rounded-lg px-3.5 py-3 text-center lg:text-left">
-      <div className="text-[10px] text-muted-on-navy tracking-[0.14em] uppercase mb-1">{label}</div>
+      <div className="text-[10px] text-muted-on-navy tracking-[0.14em] uppercase mb-1">
+        <EditableText storageKey={`${base}.label`}>{t(`${base}.label`)}</EditableText>
+      </div>
       <div className="flex items-baseline gap-1.5 justify-center lg:justify-start">
-        <span className="text-[24px] font-medium text-white leading-none">{value}</span>
-        <span className="text-[11px] text-muted-on-navy">{sub}</span>
+        <span className="text-[24px] font-medium text-white leading-none">
+          <EditableText storageKey={`${base}.value`}>{t(`${base}.value`)}</EditableText>
+        </span>
+        <span className="text-[11px] text-muted-on-navy">
+          <EditableText storageKey={`${base}.sub`}>{t(`${base}.sub`)}</EditableText>
+        </span>
       </div>
     </div>
   );
