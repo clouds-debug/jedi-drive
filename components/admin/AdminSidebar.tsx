@@ -138,6 +138,16 @@ export function AdminSidebar({ role, login }: { role: UserRole; login: string })
         <div className="flex-1 text-right truncate">
           <span className="text-[12.5px] text-white">{activeItem?.label ?? "Админка"}</span>
         </div>
+        <Link
+          href="/cabinet/profile"
+          aria-label="Личный кабинет"
+          className="inline-flex items-center justify-center w-10 h-10 rounded-lg border border-white/15 bg-white/[0.04] text-white hover:bg-white/[0.08]"
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7">
+            <circle cx="12" cy="8" r="4" />
+            <path d="M4 21c0-4.4 3.6-8 8-8s8 3.6 8 8" />
+          </svg>
+        </Link>
         <button
           type="button"
           onClick={() => setOpen(true)}
