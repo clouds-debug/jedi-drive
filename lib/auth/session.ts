@@ -38,10 +38,13 @@ export async function createSession(
 
 export async function setSessionCookie(jwt: string): Promise<void> {
   const c = await cookies();
+  const secureCookie = process.env.COOKIE_SECURE
+    ? process.env.COOKIE_SECURE !== "0"
+    : process.env.NODE_ENV === "production";
   c.set(COOKIE_NAME, jwt, {
     httpOnly: true,
     sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
+    secure: secureCookie,
     path: "/",
     maxAge: SESSION_TTL_DAYS * 24 * 60 * 60,
   });
