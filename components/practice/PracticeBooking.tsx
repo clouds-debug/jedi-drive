@@ -435,7 +435,7 @@ function InstructorPicker({
 
           <div
             ref={scrollRef}
-            className="flex-1 min-w-0 overflow-x-auto scroll-smooth snap-x snap-mandatory pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+            className="flex-1 min-w-0 overflow-x-auto overscroll-x-contain touch-pan-x scroll-smooth snap-x snap-mandatory pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
           >
             <div className="flex gap-3">
               {filtered.map((inst) => {

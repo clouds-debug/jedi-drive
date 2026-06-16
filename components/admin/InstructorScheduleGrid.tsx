@@ -677,7 +677,7 @@ function DayScroller({ children }: { children: React.ReactNode }) {
       </button>
       <div
         ref={ref}
-        className="flex gap-1.5 overflow-x-auto no-scrollbar pb-1 flex-1 scroll-smooth"
+        className="flex gap-1.5 overflow-x-auto overscroll-x-contain touch-pan-x no-scrollbar pb-1 flex-1 scroll-smooth"
       >
         {children}
       </div>

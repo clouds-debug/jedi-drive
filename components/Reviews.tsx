@@ -83,7 +83,7 @@ export function Reviews() {
         <Reveal delay={120}>
           <div
             ref={scrollRef}
-            className="overflow-x-auto scroll-smooth snap-x snap-mandatory -mx-6 px-6 lg:-mx-10 lg:px-10 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+            className="overflow-x-auto overscroll-x-contain touch-pan-x scroll-smooth snap-x snap-mandatory -mx-6 px-6 lg:-mx-10 lg:px-10 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
           >
             <div className="flex gap-4">
               {reviews.map((r) => (
