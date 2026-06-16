@@ -106,8 +106,37 @@ export function Nav() {
               {items.map((item) => {
                 if (item.key === "nav.services") {
                   return (
-                    <div key={item.href} className="px-2 pt-3 pb-1 text-[11px] text-muted-on-navy tracking-[0.16em] uppercase">
-                      {t("nav.services")}
+                    <div key={item.href}>
+                      <div className="px-2 pt-3 pb-1 text-[11px] text-muted-on-navy tracking-[0.16em] uppercase">
+                        {t("nav.services")}
+                      </div>
+                      <L
+                        href="/services/theory"
+                        onClick={() => setOpen(false)}
+                        className={`flex items-center gap-3 px-4 py-3 rounded-lg text-[14px] text-muted-on-navy hover:bg-white/[0.04] hover:text-white transition-colors`}
+                      >
+                        <span className="w-8 h-8 bg-orange/15 rounded-lg grid place-items-center shrink-0">
+                          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#FDBA74" strokeWidth="1.7">
+                            <path d="M4 4h12a3 3 0 0 1 3 3v13H7a3 3 0 0 1-3-3V4z" />
+                            <path d="M4 17a3 3 0 0 1 3-3h12" />
+                          </svg>
+                        </span>
+                        {t("nav.services.theory.title")}
+                      </L>
+                      <L
+                        href="/services/practice"
+                        onClick={() => setOpen(false)}
+                        className={`flex items-center gap-3 px-4 py-3 rounded-lg text-[14px] text-muted-on-navy hover:bg-white/[0.04] hover:text-white transition-colors`}
+                      >
+                        <span className="w-8 h-8 bg-orange/15 rounded-lg grid place-items-center shrink-0">
+                          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#FDBA74" strokeWidth="1.7">
+                            <circle cx="12" cy="12" r="8" />
+                            <circle cx="12" cy="12" r="3" />
+                            <path d="M12 4v4M12 16v4M4 12h4M16 12h4" />
+                          </svg>
+                        </span>
+                        {t("nav.services.practice.title")}
+                      </L>
                     </div>
                   );
                 }
@@ -125,33 +154,6 @@ export function Nav() {
                   </L>
                 );
               })}
-              <L
-                href="/services/theory"
-                onClick={() => setOpen(false)}
-                className={`flex items-center gap-3 px-4 py-3 rounded-lg text-[14px] text-muted-on-navy hover:bg-white/[0.04] hover:text-white transition-colors`}
-              >
-                <span className="w-8 h-8 bg-orange/15 rounded-lg grid place-items-center shrink-0">
-                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#FDBA74" strokeWidth="1.7">
-                    <path d="M4 4h12a3 3 0 0 1 3 3v13H7a3 3 0 0 1-3-3V4z" />
-                    <path d="M4 17a3 3 0 0 1 3-3h12" />
-                  </svg>
-                </span>
-                {t("nav.services.theory.title")}
-              </L>
-              <L
-                href="/services/practice"
-                onClick={() => setOpen(false)}
-                className={`flex items-center gap-3 px-4 py-3 rounded-lg text-[14px] text-muted-on-navy hover:bg-white/[0.04] hover:text-white transition-colors`}
-              >
-                <span className="w-8 h-8 bg-orange/15 rounded-lg grid place-items-center shrink-0">
-                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#FDBA74" strokeWidth="1.7">
-                    <circle cx="12" cy="12" r="8" />
-                    <circle cx="12" cy="12" r="3" />
-                    <path d="M12 4v4M12 16v4M4 12h4M16 12h4" />
-                  </svg>
-                </span>
-                {t("nav.services.practice.title")}
-              </L>
 
               <div className="h-px bg-white/[0.06] my-3" />
 
