@@ -1,6 +1,7 @@
 // Jedi Drive — Telegram bot for students.
-// Запуск: pm2 start "tsx bot-user/index.ts" --name jedi-bot-user
-// Требует env: TELEGRAM_USER_BOT_TOKEN, INTERNAL_API_TOKEN, INTERNAL_API_BASE
+// Запуск: pm2 start "npx tsx --env-file=.env.local bot-user/index.ts" --name jedi-bot-user
+
+import { botT, isBotLang, langKeyboard, type BotLang } from "../lib/bot-i18n";
 
 const TOKEN = process.env.TELEGRAM_USER_BOT_TOKEN;
 const INTERNAL = process.env.INTERNAL_API_TOKEN;
@@ -25,6 +26,12 @@ type Update = {
     from?: { id: number; username?: string; first_name?: string };
     text?: string;
   };
+  callback_query?: {
+    id: string;
+    from: { id: number };
+    message?: { message_id: number; chat: { id: number } };
+    data?: string;
+  };
 };
 
 async function tg(method: string, payload: Record<string, unknown>) {
@@ -41,100 +48,131 @@ async function tg(method: string, payload: Record<string, unknown>) {
   }
 }
 
-async function sendMessage(chatId: number, text: string) {
+async function sendMessage(chatId: number, text: string, replyMarkup?: unknown) {
   return tg("sendMessage", {
     chat_id: chatId,
     text,
     parse_mode: "HTML",
     disable_web_page_preview: true,
+    reply_markup: replyMarkup,
   });
 }
 
-async function callStatus(chatId: number): Promise<{ linked: boolean; firstName?: string | null }> {
+async function answerCallback(id: string, text?: string) {
+  return tg("answerCallbackQuery", { callback_query_id: id, text: text ?? "" });
+}
+
+async function internalGet(path: string): Promise<any> {
   try {
-    const r = await fetch(`${BASE}/api/internal/tg-status`, {
-      method: "POST",
-      headers: {
-        "content-type": "application/json",
-        authorization: `Bearer ${INTERNAL}`,
-      },
-      body: JSON.stringify({ chatId }),
+    const r = await fetch(`${BASE}${path}`, {
+      headers: { authorization: `Bearer ${INTERNAL}` },
     });
-    return (await r.json()) as { linked: boolean; firstName?: string | null };
+    return await r.json();
   } catch (e) {
-    console.error("callStatus failed", e);
-    return { linked: false };
+    console.error(`internalGet ${path} failed`, e);
+    return null;
   }
+}
+
+async function internalPost(path: string, body: unknown): Promise<any> {
+  try {
+    const r = await fetch(`${BASE}${path}`, {
+      method: "POST",
+      headers: { "content-type": "application/json", authorization: `Bearer ${INTERNAL}` },
+      body: JSON.stringify(body),
+    });
+    return await r.json();
+  } catch (e) {
+    console.error(`internalPost ${path} failed`, e);
+    return null;
+  }
+}
+
+async function getLang(chatId: number): Promise<BotLang> {
+  const r = await internalGet(`/api/internal/tg-lang?kind=user&chatId=${chatId}`);
+  return isBotLang(r?.lang) ? r.lang : "ru";
+}
+
+async function getStatus(chatId: number): Promise<{ linked: boolean; firstName?: string | null }> {
+  const r = await internalPost(`/api/internal/tg-status`, { chatId });
+  return r ?? { linked: false };
 }
 
 async function callLink(token: string, chatId: number, username: string | null) {
-  try {
-    const r = await fetch(`${BASE}/api/internal/tg-link`, {
-      method: "POST",
-      headers: {
-        "content-type": "application/json",
-        authorization: `Bearer ${INTERNAL}`,
-      },
-      body: JSON.stringify({ token, chatId, username }),
-    });
-    return (await r.json()) as {
-      ok: boolean;
-      firstName?: string | null;
-      message?: string;
-      error?: string;
-    };
-  } catch (e) {
-    console.error("callLink failed", e);
-    return { ok: false, error: "network" };
-  }
+  return internalPost(`/api/internal/tg-link`, { token, chatId, username });
 }
 
 async function handleUpdate(u: Update) {
+  // callback (язык)
+  if (u.callback_query) {
+    const cq = u.callback_query;
+    const data = cq.data ?? "";
+    const m = data.match(/^lang:(ru|ge)$/);
+    if (!m || !cq.message) {
+      await answerCallback(cq.id);
+      return;
+    }
+    const newLang = m[1] as BotLang;
+    const chatId = cq.message.chat.id;
+    const setRes = await internalPost(`/api/internal/tg-lang`, {
+      kind: "user",
+      chatId,
+      lang: newLang,
+    });
+    if (!setRes?.ok) {
+      // не привязан — предложить привязать сначала
+      await answerCallback(cq.id, botT(newLang, "user.start.unlinked").replace(/<[^>]+>/g, ""));
+      return;
+    }
+    await sendMessage(chatId, botT(newLang, `lang.set.${newLang}`));
+    await answerCallback(cq.id);
+    return;
+  }
+
   const msg = u.message;
   if (!msg || !msg.text) return;
   const chatId = msg.chat.id;
   const text = msg.text.trim();
 
   if (text === "/start") {
-    const status = await callStatus(chatId);
+    const status = await getStatus(chatId);
     if (status.linked) {
+      const lang = await getLang(chatId);
       const hi = status.firstName ? `, ${status.firstName}` : "";
-      await sendMessage(
-        chatId,
-        `Привет${hi}! 👋\n\nЭтот бот отправляет уведомления о твоих заявках в <b>Jedi Drive</b> — подтверждения, отказы, переносы.\n\nВсё остальное — в личном кабинете на сайте.`,
-      );
+      await sendMessage(chatId, botT(lang, "user.start.linked", { hi }));
     } else {
-      await sendMessage(
-        chatId,
-        "Привет! Я бот <b>Jedi Drive</b>. Чтобы привязать меня к своему аккаунту, открой кабинет на сайте и нажми «Привязать Telegram».",
-      );
+      // ещё не привязан — язык в БД ещё нет, используем ru
+      await sendMessage(chatId, botT("ru", "user.start.unlinked"));
     }
     return;
   }
+
   const m = text.match(/^\/start\s+(\S+)$/);
   if (m) {
     const token = m[1];
     const username = msg.from?.username ?? null;
     const r = await callLink(token, chatId, username);
-    if (r.ok) {
+    const lang = await getLang(chatId);
+    if (r?.ok) {
       const hi = r.firstName ? `, ${r.firstName}` : "";
-      await sendMessage(
-        chatId,
-        `Готово${hi}! ✅\n\nТеперь сюда будут приходить уведомления о твоих заявках.`,
-      );
+      await sendMessage(chatId, botT(lang, "user.bound.ok", { hi }));
     } else {
-      await sendMessage(
-        chatId,
-        r.message ?? "Не получилось привязать. Запроси новый токен в кабинете.",
-      );
+      await sendMessage(chatId, r?.message ?? botT(lang, "user.bound.fail"));
     }
     return;
   }
+
+  if (text === "/lang") {
+    const lang = await getLang(chatId);
+    await sendMessage(chatId, botT(lang, "lang.choose"), {
+      inline_keyboard: langKeyboard(),
+    });
+    return;
+  }
+
   if (text === "/help") {
-    await sendMessage(
-      chatId,
-      "Я отправляю уведомления о твоих заявках на занятия. Привязка — через кабинет на сайте.",
-    );
+    const lang = await getLang(chatId);
+    await sendMessage(chatId, botT(lang, "user.help"));
     return;
   }
 }
@@ -144,7 +182,11 @@ async function loop() {
   console.log(`[jedi-bot-user] long-polling started, base=${BASE}`);
   while (true) {
     try {
-      const r = await fetch(`${TG}/getUpdates?timeout=30&offset=${offset}`);
+      const r = await fetch(
+        `${TG}/getUpdates?timeout=30&offset=${offset}&allowed_updates=${encodeURIComponent(
+          JSON.stringify(["message", "callback_query"]),
+        )}`,
+      );
       const data = (await r.json()) as { ok: boolean; result?: Update[] };
       if (!data.ok || !data.result) {
         await new Promise((res) => setTimeout(res, 3000));

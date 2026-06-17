@@ -1,6 +1,8 @@
 // Telegram bot integration — server-side helpers.
 // Используется и Next.js, и оба bot-процесса.
 
+import { botT, type BotLang } from "@/lib/bot-i18n";
+
 const TG_API = "https://api.telegram.org";
 
 function userToken(): string | null {
@@ -131,8 +133,9 @@ export function formatBookingCardForMod(b: {
   instructorName: string | null;
   format: string | null;
   notes: string | null;
-}): string {
-  const date = b.scheduledAt.toLocaleString("ru-RU", {
+}, lang: BotLang = "ru"): string {
+  const intlLocale = lang === "ge" ? "ka-GE" : "ru-RU";
+  const date = b.scheduledAt.toLocaleString(intlLocale, {
     weekday: "short",
     day: "2-digit",
     month: "long",
@@ -140,36 +143,36 @@ export function formatBookingCardForMod(b: {
     minute: "2-digit",
     timeZone: "Asia/Tbilisi",
   });
-  const fmtRu = b.format === "pad" ? "Площадка"
-    : b.format === "city" ? "Город"
-      : b.format === "pad+city" ? "Площадка + город"
+  const fmtLabel = b.format === "pad" ? botT(lang, "card.format.pad")
+    : b.format === "city" ? botT(lang, "card.format.city")
+      : b.format === "pad+city" ? botT(lang, "card.format.padCity")
         : (b.format ?? "—");
   const contactBits: string[] = [];
   if (b.phone) contactBits.push(esc(b.phone));
   if (b.telegramUsername) contactBits.push(`<a href="https://t.me/${esc(b.telegramUsername)}">tg @${esc(b.telegramUsername)}</a>`);
   const contact = contactBits.length ? ` · ${contactBits.join(" · ")}` : "";
   const lines = [
-    `🔔 <b>Новая заявка на практику</b>`,
+    botT(lang, "card.title"),
     ``,
     `👤 ${esc(b.fullName)}` + (b.login ? ` (@${esc(b.login)})` : "") + contact,
     `📅 ${esc(date)}`,
-    `🚗 ${esc(b.instructorName ?? "—")} · ${esc(fmtRu)}`,
+    `🚗 ${esc(b.instructorName ?? "—")} · ${esc(fmtLabel)}`,
   ];
   if (b.notes) lines.push(`💬 ${esc(b.notes)}`);
   return lines.join("\n");
 }
 
-export function modCardButtons(lessonId: string): ModInlineButton[][] {
+export function modCardButtons(lessonId: string, lang: BotLang = "ru"): ModInlineButton[][] {
   const base = (process.env.PUBLIC_BASE_URL || "").replace(/\/$/, "");
   const rows: ModInlineButton[][] = [
     [
-      { text: "✅ Подтвердить", callback_data: `confirm:${lessonId}` },
-      { text: "❌ Отклонить", callback_data: `reject:${lessonId}` },
+      { text: botT(lang, "card.btn.confirm"), callback_data: `confirm:${lessonId}` },
+      { text: botT(lang, "card.btn.reject"), callback_data: `reject:${lessonId}` },
     ],
   ];
   if (base) {
     rows.push([
-      { text: "🔄 В админку", url: `${base}/admin/bookings?status=pending#lesson-${lessonId}` },
+      { text: botT(lang, "card.btn.admin"), url: `${base}/admin/bookings?status=pending#lesson-${lessonId}` },
     ]);
   }
   return rows;

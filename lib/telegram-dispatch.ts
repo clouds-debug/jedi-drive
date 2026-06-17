@@ -3,6 +3,7 @@
 
 import { query } from "@/lib/db";
 import { getTgModeratorChatIds } from "@/lib/admin/moderators";
+import { isBotLang, type BotLang } from "@/lib/bot-i18n";
 import {
   deleteModMessage,
   formatBookingCardForMod,
@@ -22,6 +23,19 @@ async function effectiveModChats(): Promise<number[]> {
   return Array.from(new Set([...fromEnv, ...fromDb]));
 }
 
+async function getModLang(chatId: number): Promise<BotLang> {
+  try {
+    const rows = await query<{ lang: string | null }>(
+      `SELECT lang FROM tg_moderators WHERE chat_id = $1 LIMIT 1`,
+      [chatId],
+    );
+    const l = rows[0]?.lang;
+    return isBotLang(l) ? l : "ru";
+  } catch {
+    return "ru";
+  }
+}
+
 type ModCardData = {
   lessonId: string;
   fullName: string;
@@ -37,11 +51,12 @@ type ModCardData = {
 export async function dispatchModBookingCard(d: ModCardData): Promise<void> {
   const chats = await effectiveModChats();
   if (chats.length === 0) return;
-  const text = formatBookingCardForMod(d);
-  const buttons = modCardButtons(d.lessonId);
 
   for (const chatId of chats) {
     try {
+      const lang = await getModLang(chatId);
+      const text = formatBookingCardForMod(d, lang);
+      const buttons = modCardButtons(d.lessonId, lang);
       const res = await sendModMessage(chatId, text, buttons);
       if (res.ok && res.messageId) {
         await query(

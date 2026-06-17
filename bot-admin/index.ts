@@ -1,6 +1,7 @@
 // Jedi Drive — Telegram bot for moderators (inline-buttons over booking cards).
-// Запуск: pm2 start "tsx bot-admin/index.ts" --name jedi-bot-admin
-// Требует env: TELEGRAM_ADMIN_BOT_TOKEN, INTERNAL_API_TOKEN, INTERNAL_API_BASE
+// Запуск: pm2 start "npx tsx --env-file=.env.local bot-admin/index.ts" --name jedi-bot-admin
+
+import { botT, isBotLang, langKeyboard, type BotLang } from "../lib/bot-i18n";
 
 const TOKEN = process.env.TELEGRAM_ADMIN_BOT_TOKEN;
 const INTERNAL = process.env.INTERNAL_API_TOKEN;
@@ -51,21 +52,12 @@ async function tg(method: string, payload: Record<string, unknown>) {
   }
 }
 
-async function sendMessage(chatId: number, text: string) {
+async function sendMessage(chatId: number, text: string, replyMarkup?: unknown) {
   return tg("sendMessage", {
     chat_id: chatId,
     text,
     parse_mode: "HTML",
-  });
-}
-
-async function editMessage(chatId: number, messageId: number, text: string) {
-  return tg("editMessageText", {
-    chat_id: chatId,
-    message_id: messageId,
-    text,
-    parse_mode: "HTML",
-    reply_markup: { inline_keyboard: [] },
+    reply_markup: replyMarkup,
   });
 }
 
@@ -77,67 +69,115 @@ async function answerCallback(id: string, text?: string) {
   return tg("answerCallbackQuery", { callback_query_id: id, text: text ?? "" });
 }
 
-async function callDecision(lessonId: string, action: "confirm" | "reject", modName: string | null) {
+async function internalGet(path: string): Promise<any> {
   try {
-    const r = await fetch(`${BASE}/api/internal/mod-decision`, {
-      method: "POST",
-      headers: {
-        "content-type": "application/json",
-        authorization: `Bearer ${INTERNAL}`,
-      },
-      body: JSON.stringify({ lessonId, action, modName }),
+    const r = await fetch(`${BASE}${path}`, {
+      headers: { authorization: `Bearer ${INTERNAL}` },
     });
-    return (await r.json()) as { ok: boolean; error?: string; newStatus?: string };
+    return await r.json();
   } catch (e) {
-    console.error("callDecision failed", e);
-    return { ok: false, error: "network" };
+    console.error(`internalGet ${path} failed`, e);
+    return null;
   }
 }
 
-async function handleUpdate(u: Update) {
-  if (u.message?.text === "/start") {
-    const chatId = u.message.chat.id;
-    await sendMessage(
-      chatId,
-      [
-        "Привет! Это <b>модераторский бот Jedi Drive</b>.",
-        "",
-        `Твой chat_id: <code>${chatId}</code>`,
-        "Передай его админу — он добавит тебя в рассылку заявок.",
-      ].join("\n"),
-    );
-    return;
+async function internalPost(path: string, body: unknown): Promise<any> {
+  try {
+    const r = await fetch(`${BASE}${path}`, {
+      method: "POST",
+      headers: { "content-type": "application/json", authorization: `Bearer ${INTERNAL}` },
+      body: JSON.stringify(body),
+    });
+    return await r.json();
+  } catch (e) {
+    console.error(`internalPost ${path} failed`, e);
+    return null;
   }
+}
 
+async function getLang(chatId: number): Promise<BotLang> {
+  const r = await internalGet(`/api/internal/tg-lang?kind=mod&chatId=${chatId}`);
+  return isBotLang(r?.lang) ? r.lang : "ru";
+}
+
+async function callDecision(lessonId: string, action: "confirm" | "reject", modName: string | null) {
+  return internalPost(`/api/internal/mod-decision`, { lessonId, action, modName });
+}
+
+async function handleUpdate(u: Update) {
+  // callback (язык или решение)
   if (u.callback_query) {
     const cq = u.callback_query;
     const data = cq.data ?? "";
-    const m = data.match(/^(confirm|reject):(.+)$/);
-    if (!m || !cq.message) {
-      await answerCallback(cq.id, "Неизвестное действие");
+
+    // язык
+    const langMatch = data.match(/^lang:(ru|ge)$/);
+    if (langMatch && cq.message) {
+      const newLang = langMatch[1] as BotLang;
+      const chatId = cq.message.chat.id;
+      const setRes = await internalPost(`/api/internal/tg-lang`, {
+        kind: "mod",
+        chatId,
+        lang: newLang,
+      });
+      if (!setRes?.ok) {
+        await answerCallback(cq.id, "Сначала добавь себя через /start");
+        return;
+      }
+      await sendMessage(chatId, botT(newLang, `lang.set.${newLang}`));
+      await answerCallback(cq.id);
       return;
     }
-    const action = m[1] as "confirm" | "reject";
-    const lessonId = m[2];
+
+    // решение
+    const decisionMatch = data.match(/^(confirm|reject):(.+)$/);
+    if (!decisionMatch || !cq.message) {
+      const lang = cq.message ? await getLang(cq.message.chat.id) : "ru";
+      await answerCallback(cq.id, botT(lang, "mod.cb.unknown"));
+      return;
+    }
+    const action = decisionMatch[1] as "confirm" | "reject";
+    const lessonId = decisionMatch[2];
     const modName =
       cq.from.username ? `@${cq.from.username}` : cq.from.first_name ?? `id${cq.from.id}`;
+    const lang = await getLang(cq.message.chat.id);
 
     const res = await callDecision(lessonId, action, modName);
-    if (!res.ok) {
-      const human =
-        res.error === "already_closed"
-          ? "Заявка уже закрыта другим модератором."
-          : res.error === "not_found"
-            ? "Заявка не найдена."
-            : "Ошибка. Попробуй ещё раз.";
-      await answerCallback(cq.id, human);
+    if (!res?.ok) {
+      const key =
+        res?.error === "already_closed"
+          ? "mod.cb.alreadyClosed"
+          : res?.error === "not_found"
+            ? "mod.cb.notFound"
+            : "mod.cb.error";
+      await answerCallback(cq.id, botT(lang, key));
       return;
     }
 
-    const verb = action === "confirm" ? "✅ Подтверждено" : "❌ Отклонено";
+    const verb = botT(lang, action === "confirm" ? "mod.cb.confirmed" : "mod.cb.rejected");
     await deleteMessage(cq.message.chat.id, cq.message.message_id);
     await answerCallback(cq.id, verb);
     return;
+  }
+
+  // text-сообщения
+  if (u.message?.text) {
+    const text = u.message.text.trim();
+    const chatId = u.message.chat.id;
+
+    if (text === "/start") {
+      const lang = await getLang(chatId);
+      await sendMessage(chatId, botT(lang, "mod.start", { chatId }));
+      return;
+    }
+
+    if (text === "/lang") {
+      const lang = await getLang(chatId);
+      await sendMessage(chatId, botT(lang, "lang.choose"), {
+        inline_keyboard: langKeyboard(),
+      });
+      return;
+    }
   }
 }
 
