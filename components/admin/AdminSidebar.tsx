@@ -1,13 +1,15 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import type { UserRole } from "@/lib/auth/roles";
+import { useT, useLocale } from "@/lib/i18n/client";
+import { stripLocalePrefix, withLocalePrefix, type Locale } from "@/lib/i18n/config";
 
 type NavItem = {
   href: string;
-  label: string;
+  labelKey: string;
   icon: React.ReactNode;
   roles: ReadonlyArray<UserRole>;
 };
@@ -15,7 +17,7 @@ type NavItem = {
 const items: NavItem[] = [
   {
     href: "/admin",
-    label: "Дашборд",
+    labelKey: "admin.sidebar.dashboard",
     roles: ["admin"],
     icon: (
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
@@ -28,7 +30,7 @@ const items: NavItem[] = [
   },
   {
     href: "/admin/bookings",
-    label: "Заявки",
+    labelKey: "admin.sidebar.bookings",
     roles: ["admin", "moderator"],
     icon: (
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
@@ -39,7 +41,7 @@ const items: NavItem[] = [
   },
   {
     href: "/admin/bio",
-    label: "Биография",
+    labelKey: "admin.sidebar.bio",
     roles: ["instructor"],
     icon: (
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
@@ -50,7 +52,7 @@ const items: NavItem[] = [
   },
   {
     href: "/admin/schedule",
-    label: "Мой календарь",
+    labelKey: "admin.sidebar.schedule",
     roles: ["instructor"],
     icon: (
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
@@ -61,7 +63,7 @@ const items: NavItem[] = [
   },
   {
     href: "/admin/reviews",
-    label: "Отзывы",
+    labelKey: "admin.sidebar.reviews",
     roles: ["admin", "moderator"],
     icon: (
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
@@ -71,7 +73,7 @@ const items: NavItem[] = [
   },
   {
     href: "/admin/users",
-    label: "Пользователи",
+    labelKey: "admin.sidebar.users",
     roles: ["admin"],
     icon: (
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
@@ -84,7 +86,7 @@ const items: NavItem[] = [
   },
   {
     href: "/admin/settings",
-    label: "Настройки",
+    labelKey: "admin.sidebar.settings",
     roles: ["admin"],
     icon: (
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
@@ -96,7 +98,10 @@ const items: NavItem[] = [
 ];
 
 export function AdminSidebar({ role, login }: { role: UserRole; login: string }) {
+  const { t } = useT();
+  const locale = useLocale();
   const pathname = usePathname() || "";
+  const { rest: internalPath } = stripLocalePrefix(pathname);
   const [open, setOpen] = useState(false);
   const visible = items.filter((i) => i.roles.includes(role));
 
@@ -113,34 +118,36 @@ export function AdminSidebar({ role, login }: { role: UserRole; login: string })
 
   const roleLabel =
     role === "admin"
-      ? "Супер-админ"
+      ? t("admin.sidebar.role.admin")
       : role === "moderator"
-        ? "Модератор"
+        ? t("admin.sidebar.role.moderator")
         : role === "instructor"
-          ? "Инструктор"
-          : "Гость";
+          ? t("admin.sidebar.role.instructor")
+          : t("admin.sidebar.role.guest");
 
   const activeItem = visible.find((it) =>
-    it.href === "/admin" ? pathname === "/admin" : pathname === it.href || pathname.startsWith(it.href + "/"),
+    it.href === "/admin" ? internalPath === "/admin" : internalPath === it.href || internalPath.startsWith(it.href + "/"),
   );
+
+  const localized = (href: string) => withLocalePrefix(href, locale);
 
   return (
     <>
       {/* Mobile top bar */}
       <div className="md:hidden sticky top-0 z-40 flex items-center justify-between gap-2 px-4 py-3 bg-navy-deep border-b border-white/[0.06]">
         <Link
-          href="/"
+          href={localized("/")}
           className="font-mono text-[11px] tracking-[0.18em] uppercase text-white hover:text-orange-soft transition-colors inline-flex items-center gap-2"
         >
           <span className="w-1.5 h-1.5 rounded-full bg-orange" />
           Jedi Drive
         </Link>
         <div className="flex-1 text-right truncate">
-          <span className="text-[12.5px] text-white">{activeItem?.label ?? "Админка"}</span>
+          <span className="text-[12.5px] text-white">{activeItem ? t(activeItem.labelKey) : t("admin.sidebar.admin")}</span>
         </div>
         <Link
-          href="/cabinet/profile"
-          aria-label="Личный кабинет"
+          href={localized("/cabinet/profile")}
+          aria-label={t("admin.sidebar.profile")}
           className="inline-flex items-center justify-center w-10 h-10 rounded-lg border border-white/15 bg-white/[0.04] text-white hover:bg-white/[0.08]"
         >
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7">
@@ -151,7 +158,7 @@ export function AdminSidebar({ role, login }: { role: UserRole; login: string })
         <button
           type="button"
           onClick={() => setOpen(true)}
-          aria-label="Меню"
+          aria-label={t("admin.sidebar.menu")}
           className="inline-flex items-center justify-center w-10 h-10 rounded-lg border border-white/15 bg-white/[0.04] text-white hover:bg-white/[0.08]"
         >
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -178,7 +185,7 @@ export function AdminSidebar({ role, login }: { role: UserRole; login: string })
         <div className="px-5 py-5 border-b border-white/[0.06] flex items-start justify-between gap-3">
           <div className="flex-1 min-w-0">
             <Link
-              href="/"
+              href={localized("/")}
               className="font-mono text-[11px] tracking-[0.18em] uppercase text-white hover:text-orange-soft transition-colors flex items-center gap-2"
             >
               <span className="w-1.5 h-1.5 rounded-full bg-orange" />
@@ -188,11 +195,14 @@ export function AdminSidebar({ role, login }: { role: UserRole; login: string })
               <div className="text-[10.5px] text-muted-on-navy tracking-[0.16em] uppercase">{roleLabel}</div>
               <div className="text-[13.5px] text-white mt-0.5 truncate">@{login}</div>
             </div>
+            <div className="mt-3">
+              <LangSwitch />
+            </div>
           </div>
           <button
             type="button"
             onClick={() => setOpen(false)}
-            aria-label="Закрыть"
+            aria-label={t("admin.sidebar.close")}
             className="md:hidden -mr-1 -mt-1 inline-flex items-center justify-center w-9 h-9 rounded-lg border border-white/15 bg-white/[0.04] text-white hover:bg-white/[0.08]"
           >
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -204,12 +214,12 @@ export function AdminSidebar({ role, login }: { role: UserRole; login: string })
         <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-0.5">
           {visible.map((it) => {
             const active = it.href === "/admin"
-              ? pathname === "/admin"
-              : pathname === it.href || pathname.startsWith(it.href + "/");
+              ? internalPath === "/admin"
+              : internalPath === it.href || internalPath.startsWith(it.href + "/");
             return (
               <Link
                 key={it.href}
-                href={it.href}
+                href={localized(it.href)}
                 className={`flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13px] transition-colors ${
                   active
                     ? "bg-orange/15 text-white border-l-2 border-l-orange pl-[10px]"
@@ -217,7 +227,7 @@ export function AdminSidebar({ role, login }: { role: UserRole; login: string })
                 }`}
               >
                 <span className={active ? "text-orange-soft" : ""}>{it.icon}</span>
-                {it.label}
+                {t(it.labelKey)}
               </Link>
             );
           })}
@@ -225,14 +235,14 @@ export function AdminSidebar({ role, login }: { role: UserRole; login: string })
 
         <div className="border-t border-white/[0.06] px-3 py-4 space-y-0.5">
           <Link
-            href="/cabinet/profile"
+            href={localized("/cabinet/profile")}
             className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[12.5px] text-muted-on-navy hover:text-white hover:bg-white/[0.04] transition-colors"
           >
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
               <circle cx="12" cy="8" r="4" />
               <path d="M4 21c0-4.4 3.6-8 8-8s8 3.6 8 8" />
             </svg>
-            Личный кабинет
+            {t("admin.sidebar.profile")}
           </Link>
           <LogoutButton />
         </div>
@@ -241,7 +251,45 @@ export function AdminSidebar({ role, login }: { role: UserRole; login: string })
   );
 }
 
+function LangSwitch() {
+  const router = useRouter();
+  const fullPath = usePathname() || "/";
+  const { rest: internal } = stripLocalePrefix(fullPath);
+  const locale = useLocale();
+
+  const go = (next: Locale) => {
+    if (next === locale) return;
+    document.cookie = `jd_locale=${next}; path=/; max-age=${60 * 60 * 24 * 365}; samesite=lax`;
+    router.push(withLocalePrefix(internal, next));
+    router.refresh();
+  };
+
+  return (
+    <div className="inline-flex items-center gap-0.5 bg-white/[0.05] border border-white/10 p-[3px] rounded-lg">
+      <button
+        type="button"
+        onClick={() => go("ru")}
+        className={`px-2.5 py-1 rounded-md text-[11.5px] font-medium tracking-[0.04em] transition-colors ${
+          locale === "ru" ? "bg-white text-navy" : "text-muted-on-navy hover:text-white"
+        }`}
+      >
+        ru
+      </button>
+      <button
+        type="button"
+        onClick={() => go("ge")}
+        className={`px-2.5 py-1 rounded-md text-[11.5px] font-medium tracking-[0.04em] transition-colors ${
+          locale === "ge" ? "bg-white text-navy" : "text-muted-on-navy hover:text-white"
+        }`}
+      >
+        ge
+      </button>
+    </div>
+  );
+}
+
 function LogoutButton() {
+  const { t } = useT();
   const [pending, setPending] = useState(false);
   async function onLogout() {
     if (pending) return;
@@ -263,7 +311,7 @@ function LogoutButton() {
         <path d="M20 12H9" />
         <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
       </svg>
-      {pending ? "Выходим…" : "Выйти"}
+      {pending ? t("admin.sidebar.loggingOut") : t("admin.sidebar.logout")}
     </button>
   );
 }

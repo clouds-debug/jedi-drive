@@ -9,15 +9,19 @@ import {
 import { instructors } from "@/lib/instructors/data";
 import { ReviewDecisionActions } from "@/components/admin/ReviewDecisionActions";
 import { Pagination } from "@/components/admin/Pagination";
+import { getT } from "@/lib/i18n/server";
 
 const PAGE_SIZE = 10;
 
-export const metadata: Metadata = { title: "Отзывы — админка Jedi Drive" };
+export async function generateMetadata(): Promise<Metadata> {
+  const { t } = await getT();
+  return { title: t("admin.reviews.metaTitle") };
+}
 
 const TABS = [
-  { key: "pending", label: "На проверке" },
-  { key: "approved", label: "Одобренные" },
-  { key: "rejected", label: "Отклонённые" },
+  { key: "pending", labelKey: "admin.reviews.tab.pending" },
+  { key: "approved", labelKey: "admin.reviews.tab.approved" },
+  { key: "rejected", labelKey: "admin.reviews.tab.rejected" },
 ] as const;
 
 type TabKey = (typeof TABS)[number]["key"];
@@ -45,8 +49,8 @@ function Stars({ rating }: { rating: number }) {
   );
 }
 
-function fmtDate(iso: string) {
-  return new Date(iso).toLocaleString("ru-RU", {
+function fmtDate(iso: string, locale: string) {
+  return new Date(iso).toLocaleString(locale === "ge" ? "ka-GE" : "ru-RU", {
     day: "2-digit",
     month: "long",
     hour: "2-digit",
@@ -61,9 +65,10 @@ export default async function ReviewsPage({
   searchParams: Promise<{ status?: string; page?: string }>;
 }) {
   await requireAdminRole(["admin", "moderator"]);
+  const { t, locale } = await getT();
 
   const sp = await searchParams;
-  const status: TabKey = (TABS.find((t) => t.key === sp.status)?.key ?? "pending") as TabKey;
+  const status: TabKey = (TABS.find((tt) => tt.key === sp.status)?.key ?? "pending") as TabKey;
 
   const total = await countReviewsByStatus(status);
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
@@ -78,25 +83,25 @@ export default async function ReviewsPage({
   return (
     <div className="p-4 sm:p-8 lg:p-10 max-w-[1100px]">
       <div className="mb-2 text-[11px] font-mono text-orange tracking-[0.1em]">
-        МОДЕРАЦИЯ
+        {t("admin.reviews.kicker")}
       </div>
-      <h1 className="text-[28px] font-medium tracking-[-0.015em] mb-1">Отзывы</h1>
+      <h1 className="text-[28px] font-medium tracking-[-0.015em] mb-1">{t("admin.reviews.title")}</h1>
       <p className="text-[13.5px] text-muted-on-navy mb-8">
-        Одобряй правдивые, отклоняй обидные или ложные. Отказ можно сопроводить причиной — она уйдёт ученику в уведомлении.
+        {t("admin.reviews.subtitle")}
       </p>
 
       <nav className="flex md:flex-wrap gap-1 border-b border-white/[0.08] mb-6 overflow-x-auto md:overflow-visible overscroll-x-contain touch-pan-x -mx-4 px-4 md:mx-0 md:px-0 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-        {TABS.map((t) => {
-          const active = t.key === status;
+        {TABS.map((tt) => {
+          const active = tt.key === status;
           return (
             <Link
-              key={t.key}
-              href={`/admin/reviews?status=${t.key}`}
+              key={tt.key}
+              href={`/admin/reviews?status=${tt.key}`}
               className={`relative shrink-0 px-3 sm:px-4 py-3 text-[13px] whitespace-nowrap transition-colors ${
                 active ? "text-white" : "text-muted-on-navy hover:text-white"
               }`}
             >
-              {t.label}
+              {t(tt.labelKey)}
               <span
                 className={`absolute left-3 right-3 -bottom-px h-px bg-orange origin-left transition-transform ${
                   active ? "scale-x-100" : "scale-x-0"
@@ -110,7 +115,7 @@ export default async function ReviewsPage({
 
       {items.length === 0 ? (
         <div className="text-[13px] text-muted-on-navy bg-white/[0.02] border border-white/[0.06] rounded-lg p-6">
-          В этом разделе пока пусто.
+          {t("admin.reviews.empty")}
         </div>
       ) : (
         <div className="space-y-3">
@@ -134,7 +139,7 @@ export default async function ReviewsPage({
                         {fullName}
                       </div>
                       <div className="text-[11.5px] text-muted-on-navy truncate">
-                        @{r.user_login} · оценка для{" "}
+                        @{r.user_login} · {t("admin.reviews.ratingFor")}{" "}
                         <span className="text-white">{inst?.name ?? r.instructor_id}</span>
                       </div>
                     </div>
@@ -150,17 +155,17 @@ export default async function ReviewsPage({
 
                 <div className="flex items-center justify-between gap-3 flex-wrap pt-2 border-t border-white/[0.05]">
                   <span className="text-[11.5px] text-muted-on-navy/80 font-mono">
-                    {fmtDate(r.created_at)}
+                    {fmtDate(r.created_at, locale)}
                   </span>
                   {r.status === "pending" ? (
                     <ReviewDecisionActions reviewId={r.id} />
                   ) : r.status === "approved" ? (
                     <span className="text-[10.5px] font-mono uppercase tracking-[0.1em] text-orange-soft border border-orange/30 bg-orange/[0.06] rounded px-2 py-0.5">
-                      Опубликован
+                      {t("admin.reviews.published")}
                     </span>
                   ) : (
                     <span className="text-[10.5px] font-mono uppercase tracking-[0.1em] text-red-300 border border-red-500/30 bg-red-500/[0.08] rounded px-2 py-0.5">
-                      Отклонён
+                      {t("admin.reviews.rejected")}
                       {r.reject_reason ? ` · ${r.reject_reason}` : ""}
                     </span>
                   )}

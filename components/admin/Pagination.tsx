@@ -1,4 +1,7 @@
+"use client";
+
 import Link from "next/link";
+import { useT } from "@/lib/i18n/client";
 
 type Props = {
   page: number;
@@ -14,6 +17,7 @@ function withPage(baseHref: string, page: number, param: string): string {
 }
 
 export function Pagination({ page, totalPages, baseHref, pageParam = "page" }: Props) {
+  const { t } = useT();
   const prev = Math.max(1, page - 1);
   const next = Math.min(totalPages, page + 1);
   const canPrev = page > 1;
@@ -22,25 +26,27 @@ export function Pagination({ page, totalPages, baseHref, pageParam = "page" }: P
   return (
     <div className="mt-6 flex items-center justify-between gap-3 flex-wrap">
       <div className="text-[11.5px] text-muted-on-navy font-mono tabular-nums">
-        Стр. {page} из {totalPages}
+        {t("admin.pagination.page", { page, total: totalPages })}
       </div>
       <div className="flex items-center gap-2">
         <ArrowLink
           href={withPage(baseHref, prev, pageParam)}
           dir="left"
           disabled={!canPrev}
+          label={t("admin.pagination.prev")}
         />
         <ArrowLink
           href={withPage(baseHref, next, pageParam)}
           dir="right"
           disabled={!canNext}
+          label={t("admin.pagination.next")}
         />
       </div>
     </div>
   );
 }
 
-function ArrowLink({ href, dir, disabled }: { href: string; dir: "left" | "right"; disabled: boolean }) {
+function ArrowLink({ href, dir, disabled, label }: { href: string; dir: "left" | "right"; disabled: boolean; label: string }) {
   const cls =
     "w-9 h-9 rounded-lg bg-white/[0.04] border border-white/15 text-white grid place-items-center transition-all";
   if (disabled) {
@@ -53,7 +59,7 @@ function ArrowLink({ href, dir, disabled }: { href: string; dir: "left" | "right
   return (
     <Link
       href={href}
-      aria-label={dir === "left" ? "Предыдущая страница" : "Следующая страница"}
+      aria-label={label}
       className={`${cls} hover:bg-white/[0.08] hover:border-white/30 hover:text-orange-soft active:scale-95`}
     >
       <Arrow dir={dir} />

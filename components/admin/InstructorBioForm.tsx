@@ -3,19 +3,20 @@
 import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { AvatarCropModal } from "./AvatarCropModal";
+import { useT } from "@/lib/i18n/client";
 
-const LANGS: { code: string; label: string }[] = [
-  { code: "ru", label: "Русский" },
-  { code: "ge", label: "ქართული" },
-  { code: "en", label: "English" },
+const LANGS: { code: string; labelKey: string }[] = [
+  { code: "ru", labelKey: "admin.bio.lang.ru" },
+  { code: "ge", labelKey: "admin.bio.lang.ge" },
+  { code: "en", labelKey: "admin.bio.lang.en" },
 ];
 
-const COLORS: { code: string; label: string; cls: string }[] = [
-  { code: "orange", label: "Оранжевый", cls: "bg-orange/40" },
-  { code: "indigo", label: "Индиго", cls: "bg-indigo-500/40" },
-  { code: "violet", label: "Фиолетовый", cls: "bg-violet-500/40" },
-  { code: "emerald", label: "Изумрудный", cls: "bg-emerald-500/40" },
-  { code: "rose", label: "Розовый", cls: "bg-rose-500/40" },
+const COLORS: { code: string; labelKey: string; cls: string }[] = [
+  { code: "orange", labelKey: "admin.bio.color.orange", cls: "bg-orange/40" },
+  { code: "indigo", labelKey: "admin.bio.color.indigo", cls: "bg-indigo-500/40" },
+  { code: "violet", labelKey: "admin.bio.color.violet", cls: "bg-violet-500/40" },
+  { code: "emerald", labelKey: "admin.bio.color.emerald", cls: "bg-emerald-500/40" },
+  { code: "rose", labelKey: "admin.bio.color.rose", cls: "bg-rose-500/40" },
 ];
 
 type Initial = {
@@ -33,6 +34,7 @@ type Initial = {
 type Errors = Record<string, string>;
 
 export function InstructorBioForm({ initial }: { initial: Initial }) {
+  const { t } = useT();
   const [firstName, setFirstName] = useState(initial.firstName);
   const [lastName, setLastName] = useState(initial.lastName);
   const [bio, setBio] = useState(initial.bio);
@@ -56,11 +58,11 @@ export function InstructorBioForm({ initial }: { initial: Initial }) {
     e.target.value = "";
     if (!file) return;
     if (file.size > 8 * 1024 * 1024) {
-      setAvatarError("Файл больше 8 МБ — выбери поменьше");
+      setAvatarError(t("admin.bio.fileTooBig"));
       return;
     }
     if (!/^image\/(jpeg|png|webp)$/.test(file.type)) {
-      setAvatarError("Только JPG, PNG или WebP");
+      setAvatarError(t("admin.bio.fileBadType"));
       return;
     }
     setAvatarError(null);
@@ -80,7 +82,7 @@ export function InstructorBioForm({ initial }: { initial: Initial }) {
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
-        setAvatarError(data?.error ?? "Не удалось загрузить");
+        setAvatarError(data?.error ?? t("admin.bio.uploadFail"));
         return;
       }
       const blobUrl = URL.createObjectURL(blob);
@@ -100,7 +102,7 @@ export function InstructorBioForm({ initial }: { initial: Initial }) {
         method: "DELETE",
       });
       if (!res.ok) {
-        setAvatarError("Не удалось удалить");
+        setAvatarError(t("admin.bio.removeFail"));
         return;
       }
       setAvatarUrl(null);
@@ -166,13 +168,13 @@ export function InstructorBioForm({ initial }: { initial: Initial }) {
       <div className="space-y-5">
         <div>
           <div className="text-[11px] text-muted-on-navy tracking-[0.1em] uppercase mb-2">
-            Фото
+            {t("admin.bio.photo")}
           </div>
           <div className="flex items-center gap-4">
             {avatarUrl ? (
               <img
                 src={avatarUrl}
-                alt="Аватар"
+                alt={t("admin.bio.avatarAlt")}
                 className="w-20 h-20 rounded-full object-cover border border-white/10"
               />
             ) : (
@@ -192,7 +194,7 @@ export function InstructorBioForm({ initial }: { initial: Initial }) {
                   onClick={() => fileInputRef.current?.click()}
                   className="bg-white/[0.06] hover:bg-white/[0.1] disabled:opacity-50 border border-white/15 text-white text-[12.5px] px-3 py-1.5 rounded-lg transition-colors"
                 >
-                  {avatarBusy ? "..." : avatarUrl ? "Заменить" : "Загрузить"}
+                  {avatarBusy ? "..." : avatarUrl ? t("admin.bio.replace") : t("admin.bio.upload")}
                 </button>
                 {avatarUrl && (
                   <button
@@ -201,12 +203,12 @@ export function InstructorBioForm({ initial }: { initial: Initial }) {
                     onClick={onRemoveAvatar}
                     className="bg-white/[0.03] hover:bg-red-500/[0.12] hover:border-red-500/30 disabled:opacity-50 border border-white/12 text-muted-on-navy hover:text-red-300 text-[12.5px] px-3 py-1.5 rounded-lg transition-colors"
                   >
-                    Удалить
+                    {t("admin.bio.remove")}
                   </button>
                 )}
               </div>
               <div className="text-[11px] text-muted-on-navy/80">
-                JPG, PNG или WebP, до 2 МБ.
+                {t("admin.bio.fileHint")}
               </div>
               {avatarError && (
                 <div className="text-[11.5px] text-orange-soft">{avatarError}</div>
@@ -225,14 +227,14 @@ export function InstructorBioForm({ initial }: { initial: Initial }) {
         <div className="grid sm:grid-cols-2 gap-4">
           <Field
             id="firstName"
-            label="Имя"
+            label={t("admin.bio.firstName")}
             value={firstName}
             onChange={setFirstName}
             error={errors.firstName}
           />
           <Field
             id="lastName"
-            label="Фамилия"
+            label={t("admin.bio.lastName")}
             value={lastName}
             onChange={setLastName}
             error={errors.lastName}
@@ -241,14 +243,14 @@ export function InstructorBioForm({ initial }: { initial: Initial }) {
 
         <label className="block">
           <span className="block text-[11px] text-muted-on-navy tracking-[0.1em] uppercase mb-1.5">
-            О себе
+            {t("admin.bio.bio")}
           </span>
           <textarea
             value={bio}
             onChange={(e) => setBio(e.target.value)}
             rows={6}
             maxLength={1500}
-            placeholder="Расскажи о своём подходе, стиле преподавания, опыте. Это будет видно на странице сайта."
+            placeholder={t("admin.bio.bioPlaceholder")}
             className="w-full bg-white/[0.04] border border-white/12 rounded-lg px-3.5 py-2.5 text-[13.5px] text-white placeholder:text-muted-on-navy/60 focus:outline-none focus:border-orange/60 resize-none"
           />
           <span className="block text-right mt-1 text-[11px] text-muted-on-navy/70 font-mono">
@@ -259,25 +261,25 @@ export function InstructorBioForm({ initial }: { initial: Initial }) {
         <div className="grid sm:grid-cols-2 gap-4">
           <Field
             id="car"
-            label="Машина"
+            label={t("admin.bio.car")}
             value={car}
             onChange={setCar}
-            placeholder="Toyota Corolla 2023, АКПП"
+            placeholder={t("admin.bio.carPlaceholder")}
           />
           <Field
             id="experienceYears"
-            label="Стаж (лет)"
+            label={t("admin.bio.experience")}
             type="number"
             value={experienceYears}
             onChange={setExperienceYears}
-            placeholder="10"
+            placeholder={t("admin.bio.experiencePlaceholder")}
             error={errors.experienceYears}
           />
         </div>
 
         <div>
           <div className="text-[11px] text-muted-on-navy tracking-[0.1em] uppercase mb-2">
-            Языки преподавания
+            {t("admin.bio.langs")}
           </div>
           <div className="flex flex-wrap gap-2">
             {LANGS.map((l) => {
@@ -293,7 +295,7 @@ export function InstructorBioForm({ initial }: { initial: Initial }) {
                       : "bg-white/[0.04] border-white/12 text-muted-on-navy hover:text-white hover:border-white/25"
                   }`}
                 >
-                  {l.label}
+                  {t(l.labelKey)}
                 </button>
               );
             })}
@@ -302,7 +304,7 @@ export function InstructorBioForm({ initial }: { initial: Initial }) {
 
         <div>
           <div className="text-[11px] text-muted-on-navy tracking-[0.1em] uppercase mb-2">
-            Цвет аватара
+            {t("admin.bio.avatarColor")}
           </div>
           <div className="flex flex-wrap gap-2">
             {COLORS.map((c) => (
@@ -317,7 +319,7 @@ export function InstructorBioForm({ initial }: { initial: Initial }) {
                 }`}
               >
                 <span className={`w-3 h-3 rounded-full ${c.cls}`} aria-hidden />
-                {c.label}
+                {t(c.labelKey)}
               </button>
             ))}
           </div>
@@ -332,10 +334,10 @@ export function InstructorBioForm({ initial }: { initial: Initial }) {
           />
           <span className="flex-1">
             <span className="block text-[13.5px] text-white">
-              Опубликовать карточку на сайте
+              {t("admin.bio.publish")}
             </span>
             <span className="block text-[12px] text-muted-on-navy mt-0.5">
-              Когда включено — твоя карточка появляется на странице «Инструкторы», и ученики могут записываться к тебе на практику.
+              {t("admin.bio.publishHint")}
             </span>
           </span>
         </label>
@@ -346,14 +348,14 @@ export function InstructorBioForm({ initial }: { initial: Initial }) {
             disabled={busy}
             className="bg-orange hover:bg-orange/90 disabled:opacity-50 text-white font-medium text-[13.5px] px-5 py-2.5 rounded-lg transition-colors"
           >
-            {busy ? "Сохраняем..." : "Сохранить"}
+            {busy ? t("admin.bio.saving") : t("admin.bio.save")}
           </button>
           {saved && (
             <span className="text-[12.5px] text-orange-soft inline-flex items-center gap-1.5">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <path d="M5 12l4 4L19 7" />
               </svg>
-              Сохранено
+              {t("admin.bio.saved")}
             </span>
           )}
         </div>
@@ -362,7 +364,7 @@ export function InstructorBioForm({ initial }: { initial: Initial }) {
       {/* Preview */}
       <aside className="lg:sticky lg:top-8 self-start">
         <div className="text-[11px] text-muted-on-navy tracking-[0.1em] uppercase mb-3">
-          Предпросмотр карточки
+          {t("admin.bio.preview")}
         </div>
         <div className="relative bg-white/[0.03] border border-white/10 border-l-[3px] border-l-orange rounded-[var(--radius-card)] p-5">
           <div className="absolute -right-12 -top-12 w-44 h-44 bg-orange/[0.10] rounded-full blur-[60px] pointer-events-none" aria-hidden />
@@ -371,7 +373,7 @@ export function InstructorBioForm({ initial }: { initial: Initial }) {
               {avatarUrl ? (
                 <img
                   src={avatarUrl}
-                  alt="Аватар"
+                  alt={t("admin.bio.avatarAlt")}
                   className="w-12 h-12 rounded-full object-cover"
                 />
               ) : (
@@ -396,7 +398,7 @@ export function InstructorBioForm({ initial }: { initial: Initial }) {
             </div>
             {experienceYears && (
               <div className="text-[12.5px] text-muted-on-navy mb-1">
-                Стаж <span className="text-white">{experienceYears} лет</span>
+                {t("admin.bio.experienceLabel")} <span className="text-white">{experienceYears} {t("admin.bio.yearsSuffix")}</span>
               </div>
             )}
             {car && (
@@ -409,7 +411,7 @@ export function InstructorBioForm({ initial }: { initial: Initial }) {
             )}
             {!isPublished && (
               <div className="mt-3 inline-flex text-[10.5px] font-mono uppercase tracking-[0.1em] text-muted-on-navy border border-white/15 bg-white/[0.04] rounded px-2 py-0.5">
-                Не опубликовано
+                {t("admin.bio.notPublished")}
               </div>
             )}
           </div>

@@ -1,21 +1,25 @@
+"use client";
+
 import type { AdminLessonRow } from "@/lib/admin/bookings";
 import { DecisionActions } from "./DecisionActions";
 import { ConfirmedActions } from "./ConfirmedActions";
 import { BlockUserButton } from "./BlockUserButton";
+import { useT, useLocale } from "@/lib/i18n/client";
 
-function fmtWhen(iso: string) {
+function fmtWhen(iso: string, locale: string) {
   const d = new Date(iso);
+  const intlLocale = locale === "ge" ? "ka-GE" : "ru-RU";
   return {
-    weekday: d.toLocaleDateString("ru-RU", {
+    weekday: d.toLocaleDateString(intlLocale, {
       weekday: "short",
       timeZone: "Asia/Tbilisi",
     }),
-    date: d.toLocaleDateString("ru-RU", {
+    date: d.toLocaleDateString(intlLocale, {
       day: "2-digit",
       month: "long",
       timeZone: "Asia/Tbilisi",
     }),
-    time: d.toLocaleTimeString("ru-RU", {
+    time: d.toLocaleTimeString(intlLocale, {
       hour: "2-digit",
       minute: "2-digit",
       timeZone: "Asia/Tbilisi",
@@ -23,43 +27,17 @@ function fmtWhen(iso: string) {
   };
 }
 
-const statusTone: Record<
-  AdminLessonRow["status"],
-  { label: string; cls: string }
-> = {
-  pending: {
-    label: "На проверке",
-    cls: "border-orange/40 bg-orange/[0.08] text-orange-soft",
-  },
-  confirmed: {
-    label: "Подтверждено",
-    cls: "border-emerald-500/40 bg-emerald-500/[0.08] text-emerald-300",
-  },
-  completed: {
-    label: "Проведено",
-    cls: "border-white/15 bg-white/[0.04] text-muted-on-navy",
-  },
-  cancelled: {
-    label: "Отменено",
-    cls: "border-red-500/30 bg-red-500/[0.08] text-red-300",
-  },
-};
-
-function kindLabel(kind: AdminLessonRow["kind"]): string {
-  return kind === "theory" ? "Теория" : "Практика";
-}
-
-function formatRu(kind: string, fmt: string): string {
-  if (kind === "theory") {
-    if (fmt === "group") return "В группе";
-    if (fmt === "individual") return "Индивидуально";
+function statusToneCls(status: AdminLessonRow["status"]): string {
+  switch (status) {
+    case "pending":
+      return "border-orange/40 bg-orange/[0.08] text-orange-soft";
+    case "confirmed":
+      return "border-emerald-500/40 bg-emerald-500/[0.08] text-emerald-300";
+    case "completed":
+      return "border-white/15 bg-white/[0.04] text-muted-on-navy";
+    case "cancelled":
+      return "border-red-500/30 bg-red-500/[0.08] text-red-300";
   }
-  if (kind === "practice") {
-    if (fmt === "pad") return "Площадка";
-    if (fmt === "city") return "Город";
-    if (fmt === "pad+city") return "Площадка + город";
-  }
-  return fmt;
 }
 
 function KindIcon({ kind }: { kind: AdminLessonRow["kind"] }) {
@@ -87,18 +65,37 @@ export function BookingCard({
   lesson: AdminLessonRow;
   showActions: boolean;
 }) {
-  const w = fmtWhen(lesson.scheduled_at);
+  const { t } = useT();
+  const locale = useLocale();
+  const w = fmtWhen(lesson.scheduled_at, locale);
   const isGuest = !lesson.user_id;
   const fullName = isGuest
-    ? lesson.guest_name ?? "Гость"
+    ? lesson.guest_name ?? t("admin.booking.guest")
     : [lesson.user_first_name, lesson.user_last_name].filter(Boolean).join(" ") ||
       lesson.user_login ||
       "—";
   const avatarLetters = isGuest
     ? (lesson.guest_name ?? "ГС").slice(0, 2).toUpperCase()
     : (lesson.user_login ?? "??").slice(0, 2).toUpperCase();
-  const status = statusTone[lesson.status];
   const isTheory = lesson.kind === "theory";
+
+  const kindLabel = t(isTheory ? "admin.kind.theory" : "admin.kind.practice");
+  const formatLabel = (() => {
+    const fmt = lesson.format;
+    if (!fmt) return null;
+    if (lesson.kind === "theory") {
+      if (fmt === "group") return t("admin.format.theory.group");
+      if (fmt === "individual") return t("admin.format.theory.individual");
+    }
+    if (lesson.kind === "practice") {
+      if (fmt === "pad") return t("admin.format.practice.pad");
+      if (fmt === "city") return t("admin.format.practice.city");
+      if (fmt === "pad+city") return t("admin.format.practice.padCity");
+    }
+    return fmt;
+  })();
+
+  const statusLabel = t(`admin.status.${lesson.status}`);
 
   return (
     <div className="relative bg-white/[0.03] border border-white/10 border-l-[3px] border-l-orange rounded-[var(--radius-card)] p-5 sm:p-6 transition-colors hover:bg-white/[0.05]">
@@ -115,7 +112,7 @@ export function BookingCard({
                 {fullName}
                 {isGuest && (
                   <span className="inline-flex text-[10px] font-mono uppercase tracking-[0.1em] border border-white/15 bg-white/[0.04] text-muted-on-navy rounded px-1.5 py-0.5">
-                    Запись инструктора
+                    {t("admin.booking.guestRecord")}
                   </span>
                 )}
               </div>
@@ -129,14 +126,14 @@ export function BookingCard({
           <div className="flex items-center gap-2 shrink-0">
             {lesson.user_is_blocked && (
               <span className="inline-flex text-[10.5px] font-mono uppercase tracking-[0.1em] border border-red-500/40 bg-red-500/[0.1] text-red-300 rounded px-2 py-0.5">
-                Заблокирован
+                {t("admin.booking.blocked")}
               </span>
             )}
             {!isTheory && (
               <span
-                className={`inline-flex text-[10.5px] font-mono uppercase tracking-[0.1em] border ${status.cls} rounded px-2 py-0.5`}
+                className={`inline-flex text-[10.5px] font-mono uppercase tracking-[0.1em] border ${statusToneCls(lesson.status)} rounded px-2 py-0.5`}
               >
-                {status.label}
+                {statusLabel}
               </span>
             )}
           </div>
@@ -149,9 +146,9 @@ export function BookingCard({
                 <KindIcon kind={lesson.kind} />
               </span>
               <span>
-                {kindLabel(lesson.kind)}
-                {lesson.format && (
-                  <span className="text-muted-on-navy"> · {formatRu(lesson.kind, lesson.format)}</span>
+                {kindLabel}
+                {formatLabel && (
+                  <span className="text-muted-on-navy"> · {formatLabel}</span>
                 )}
               </span>
             </div>
@@ -170,7 +167,12 @@ export function BookingCard({
           {isTheory ? (
             <div className="text-right shrink-0">
               <div className="text-[11.5px] text-muted-on-navy">
-                Заявка от {new Date(lesson.created_at).toLocaleDateString("ru-RU", { day: "2-digit", month: "long", timeZone: "Asia/Tbilisi" })}
+                {t("admin.booking.requestedFrom", {
+                  date: new Date(lesson.created_at).toLocaleDateString(
+                    locale === "ge" ? "ka-GE" : "ru-RU",
+                    { day: "2-digit", month: "long", timeZone: "Asia/Tbilisi" },
+                  ),
+                })}
               </div>
             </div>
           ) : (
@@ -182,7 +184,7 @@ export function BookingCard({
                 {w.weekday}, {w.date}
               </div>
               <div className="text-[10.5px] text-muted-on-navy/70 mt-0.5 font-mono">
-                {lesson.duration_min} мин
+                {t("admin.booking.durationMin", { min: lesson.duration_min })}
               </div>
             </div>
           )}
@@ -195,7 +197,7 @@ export function BookingCard({
           if (!cleaned) return null;
           return (
             <div className="mt-4 pt-3 border-t border-white/[0.05] text-[12.5px] text-muted-on-navy leading-[1.5]">
-              <span className="text-white">Комментарий:</span> {cleaned}
+              <span className="text-white">{t("admin.booking.comment")}</span> {cleaned}
             </div>
           );
         })()}

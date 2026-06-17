@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useT } from "@/lib/i18n/client";
 
 const BOX = 320; // диаметр круга в px на экране
 const OUT = 512; // финальный размер аватара в px
@@ -12,6 +13,7 @@ type Props = {
 };
 
 export function AvatarCropModal({ file, onCancel, onConfirm }: Props) {
+  const { t } = useT();
   const [imgUrl, setImgUrl] = useState<string | null>(null);
   const [img, setImg] = useState<HTMLImageElement | null>(null);
   const [scale, setScale] = useState(1);
@@ -103,19 +105,19 @@ export function AvatarCropModal({ file, onCancel, onConfirm }: Props) {
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <button
         type="button"
-        aria-label="Закрыть"
+        aria-label={t("admin.crop.close")}
         onClick={onCancel}
         className="absolute inset-0 bg-black/70 backdrop-blur-sm"
       />
       <div className="relative w-full max-w-md bg-navy border border-white/15 rounded-2xl shadow-[0_24px_60px_rgba(0,0,0,0.5)] p-5">
         <div className="text-[11px] font-mono text-orange tracking-[0.1em] mb-1">
-          АВАТАР
+          {t("admin.crop.kicker")}
         </div>
         <h2 className="text-[18px] font-medium text-white mb-1">
-          Настрой обрезку
+          {t("admin.crop.title")}
         </h2>
         <p className="text-[12.5px] text-muted-on-navy mb-4">
-          Перетащи фото и подкрути масштаб — то, что в круге, станет аватаром.
+          {t("admin.crop.hint")}
         </p>
 
         <div
@@ -168,7 +170,7 @@ export function AvatarCropModal({ file, onCancel, onConfirm }: Props) {
             onClick={onCancel}
             className="bg-white/[0.04] hover:bg-white/[0.08] border border-white/15 text-white text-[13px] px-4 py-2 rounded-lg transition-colors"
           >
-            Отмена
+            {t("admin.crop.cancel")}
           </button>
           <button
             type="button"
@@ -176,7 +178,7 @@ export function AvatarCropModal({ file, onCancel, onConfirm }: Props) {
             onClick={onSave}
             className="bg-orange hover:bg-[#EA670F] disabled:opacity-50 text-white text-[13px] font-medium px-4 py-2 rounded-lg transition-colors"
           >
-            {busy ? "Загружаем..." : "Сохранить"}
+            {busy ? t("admin.crop.uploading") : t("admin.crop.save")}
           </button>
         </div>
       </div>

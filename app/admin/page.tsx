@@ -11,13 +11,12 @@ import {
 } from "@/lib/admin/stats";
 import { DonutChart } from "@/components/admin/DonutChart";
 import { BarChart } from "@/components/admin/BarChart";
+import { getT } from "@/lib/i18n/server";
 
-export const metadata: Metadata = { title: "Дашборд — админка Jedi Drive" };
-
-const RU_MONTHS_SHORT = [
-  "янв", "фев", "мар", "апр", "май", "июн",
-  "июл", "авг", "сен", "окт", "ноя", "дек",
-];
+export async function generateMetadata(): Promise<Metadata> {
+  const { t } = await getT();
+  return { title: t("admin.dashboard.metaTitle") };
+}
 
 export default async function AdminDashboard({
   searchParams,
@@ -27,6 +26,7 @@ export default async function AdminDashboard({
   const user = await requireAdminRole(["admin", "moderator", "instructor"]);
   if (user.role !== "admin") redirect(homePathForRole(user.role));
 
+  const { t } = await getT();
   const sp = await searchParams;
   const now = new Date();
   const currentYear = now.getUTCFullYear();
@@ -46,58 +46,66 @@ export default async function AdminDashboard({
       : getMonthly({ months: 6 }),
   ]);
 
+  function monthLabel(iso: string, withMonthOnly: boolean): string {
+    const d = new Date(iso);
+    const m = t(`admin.months.short.${d.getUTCMonth()}`);
+    if (withMonthOnly) return m;
+    const y = d.getUTCFullYear().toString().slice(2);
+    return `${m} '${y}`;
+  }
+
   return (
     <div className="p-4 sm:p-8 lg:p-10 max-w-[1200px]">
       <div className="mb-2 text-[11px] font-mono text-orange tracking-[0.1em]">
-        ДАШБОРД
+        {t("admin.dashboard.kicker")}
       </div>
       <h1 className="text-[28px] font-medium tracking-[-0.015em] mb-1">
-        Статистика
+        {t("admin.dashboard.title")}
       </h1>
       <p className="text-[13.5px] text-muted-on-navy mb-8">
-        Что происходит в школе. Данные в реальном времени.
+        {t("admin.dashboard.subtitle")}
       </p>
 
       {/* Section 1: User growth */}
       <section className="mb-10">
-        <h2 className="text-[14px] text-white font-medium mb-4">Новые ученики</h2>
+        <h2 className="text-[14px] text-white font-medium mb-4">{t("admin.dashboard.newStudents")}</h2>
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          <GrowthCard label="За сутки" value={growth.day} accent="orange" />
-          <GrowthCard label="За неделю" value={growth.week} />
-          <GrowthCard label="За месяц" value={growth.month} />
-          <GrowthCard label="Всего" value={growth.total} />
+          <GrowthCard label={t("admin.dashboard.growth.day")} value={growth.day} accent="orange" />
+          <GrowthCard label={t("admin.dashboard.growth.week")} value={growth.week} />
+          <GrowthCard label={t("admin.dashboard.growth.month")} value={growth.month} />
+          <GrowthCard label={t("admin.dashboard.growth.total")} value={growth.total} />
         </div>
       </section>
 
       {/* Section 2: Status + Kind donuts */}
       <section className="mb-10">
-        <h2 className="text-[14px] text-white font-medium mb-4">Занятия — разрез</h2>
+        <h2 className="text-[14px] text-white font-medium mb-4">{t("admin.dashboard.lessons.title")}</h2>
         <div className="grid gap-5 lg:grid-cols-2">
           <Card>
             <div className="text-[11px] text-muted-on-navy tracking-[0.1em] uppercase mb-4">
-              По статусу
+              {t("admin.dashboard.lessons.byStatus")}
             </div>
             <DonutChart
-              centerLabel="Всего"
+              centerLabel={t("admin.dashboard.center.total")}
               centerValue={status.total}
               segments={[
-                { label: "На проверке", value: status.pending, color: "#F97316" },
-                { label: "Подтверждено", value: status.confirmed, color: "#34D399" },
-                { label: "Проведено", value: status.completed, color: "#60A5FA" },
-                { label: "Отменено", value: status.cancelled, color: "rgba(248,113,113,0.6)" },
+                { label: t("admin.status.pending"), value: status.pending, color: "#F97316" },
+                { label: t("admin.status.confirmed"), value: status.confirmed, color: "#34D399" },
+                { label: t("admin.status.completed"), value: status.completed, color: "#60A5FA" },
+                { label: t("admin.status.cancelled"), value: status.cancelled, color: "rgba(248,113,113,0.6)" },
               ]}
             />
           </Card>
           <Card>
             <div className="text-[11px] text-muted-on-navy tracking-[0.1em] uppercase mb-4">
-              По типу
+              {t("admin.dashboard.lessons.byKind")}
             </div>
             <DonutChart
-              centerLabel="Заявок"
+              centerLabel={t("admin.dashboard.center.bookings")}
               centerValue={kind.theory + kind.practice}
               segments={[
-                { label: "Теория", value: kind.theory, color: "#FDBA74" },
-                { label: "Практика", value: kind.practice, color: "#A78BFA" },
+                { label: t("admin.kind.theory"), value: kind.theory, color: "#FDBA74" },
+                { label: t("admin.kind.practice"), value: kind.practice, color: "#A78BFA" },
               ]}
             />
           </Card>
@@ -108,12 +116,13 @@ export default async function AdminDashboard({
       <section>
         <div className="flex flex-wrap items-end justify-between gap-3 mb-4">
           <h2 className="text-[14px] text-white font-medium">
-            Помесячно — заявки, проведено, отмены
+            {t("admin.dashboard.monthly.title")}
           </h2>
           <MonthRangeControl
             mode={mode}
             year={validYear}
             currentYear={currentYear}
+            label6m={t("admin.dashboard.monthly.6months")}
           />
         </div>
         <Card>
@@ -127,19 +136,11 @@ export default async function AdminDashboard({
           />
         </Card>
         <p className="text-[11.5px] text-muted-on-navy mt-3">
-          «Заявки» — все созданные за месяц записи независимо от итогового статуса.
+          {t("admin.dashboard.monthly.note")}
         </p>
       </section>
     </div>
   );
-}
-
-function monthLabel(iso: string, withMonthOnly: boolean): string {
-  const d = new Date(iso);
-  const m = RU_MONTHS_SHORT[d.getUTCMonth()];
-  if (withMonthOnly) return m;
-  const y = d.getUTCFullYear().toString().slice(2);
-  return `${m} '${y}`;
 }
 
 function GrowthCard({
@@ -187,10 +188,12 @@ function MonthRangeControl({
   mode,
   year,
   currentYear,
+  label6m,
 }: {
   mode: "recent" | "year";
   year: number;
   currentYear: number;
+  label6m: string;
 }) {
   const years = Array.from({ length: 4 }, (_, i) => currentYear - i);
   return (
@@ -203,7 +206,7 @@ function MonthRangeControl({
             : "text-muted-on-navy hover:text-white"
         }`}
       >
-        6 мес
+        {label6m}
       </Link>
       {years.map((y) => (
         <Link

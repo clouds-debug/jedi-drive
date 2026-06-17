@@ -2,14 +2,15 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { useT } from "@/lib/i18n/client";
 
 type Role = "student" | "instructor" | "moderator" | "admin";
 
-const ROLES: { value: Role; label: string }[] = [
-  { value: "student", label: "Ученик" },
-  { value: "instructor", label: "Инструктор" },
-  { value: "moderator", label: "Модератор" },
-  { value: "admin", label: "Админ" },
+const ROLES: { value: Role; labelKey: string }[] = [
+  { value: "student", labelKey: "admin.role.student" },
+  { value: "instructor", labelKey: "admin.role.instructor" },
+  { value: "moderator", labelKey: "admin.role.moderator" },
+  { value: "admin", labelKey: "admin.role.admin" },
 ];
 
 export function UserRoleActions({
@@ -19,6 +20,7 @@ export function UserRoleActions({
   userId: string;
   currentRole: Role;
 }) {
+  const { t } = useT();
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -36,7 +38,7 @@ export function UserRoleActions({
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
-        setError(data?.error ?? "Не получилось");
+        setError(data?.error ?? t("admin.error.generic"));
         return;
       }
       setOpen(false);
@@ -53,7 +55,7 @@ export function UserRoleActions({
         onClick={() => setOpen(true)}
         className="text-[12px] text-muted-on-navy hover:text-white border border-white/15 hover:border-white/30 px-2.5 py-1 rounded transition-colors"
       >
-        Сменить роль
+        {t("admin.role.change")}
       </button>
     );
   }
@@ -67,7 +69,7 @@ export function UserRoleActions({
       >
         {ROLES.map((r) => (
           <option key={r.value} value={r.value} className="bg-navy">
-            {r.label}
+            {t(r.labelKey)}
           </option>
         ))}
       </select>
@@ -77,14 +79,14 @@ export function UserRoleActions({
         disabled={busy}
         className="text-[12px] bg-orange hover:bg-orange/90 text-white px-2.5 py-1.5 rounded transition-colors disabled:opacity-50"
       >
-        {busy ? "..." : "Сохранить"}
+        {busy ? "..." : t("common.save")}
       </button>
       <button
         onClick={() => setOpen(false)}
         disabled={busy}
         className="text-[12px] text-muted-on-navy hover:text-white px-2 py-1.5"
       >
-        Отмена
+        {t("common.cancel")}
       </button>
       {error && (
         <span className="basis-full text-[11.5px] text-orange-soft">{error}</span>

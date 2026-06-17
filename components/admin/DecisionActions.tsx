@@ -2,8 +2,10 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { useT } from "@/lib/i18n/client";
 
 export function DecisionActions({ lessonId }: { lessonId: string }) {
+  const { t } = useT();
   const router = useRouter();
   const [busy, setBusy] = useState<"confirm" | "reject" | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -21,7 +23,7 @@ export function DecisionActions({ lessonId }: { lessonId: string }) {
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
-        setError(data?.error ?? "Не получилось");
+        setError(data?.error ?? t("admin.error.generic"));
         return;
       }
       router.refresh();
@@ -37,7 +39,7 @@ export function DecisionActions({ lessonId }: { lessonId: string }) {
           type="text"
           value={reason}
           onChange={(e) => setReason(e.target.value)}
-          placeholder="Причина (опционально)"
+          placeholder={t("admin.decision.reasonPlaceholder")}
           className="bg-white/[0.04] border border-white/12 rounded px-2.5 py-1.5 text-[12.5px] text-white focus:outline-none focus:border-orange/60 w-[220px]"
         />
         <button
@@ -45,14 +47,14 @@ export function DecisionActions({ lessonId }: { lessonId: string }) {
           disabled={busy !== null}
           className="text-[12px] bg-orange/20 hover:bg-orange/30 text-orange-soft border border-orange/40 px-2.5 py-1.5 rounded transition-colors disabled:opacity-50"
         >
-          {busy === "reject" ? "..." : "Отклонить"}
+          {busy === "reject" ? "..." : t("admin.decision.reject")}
         </button>
         <button
           onClick={() => setShowReject(false)}
           disabled={busy !== null}
           className="text-[12px] text-muted-on-navy hover:text-white px-2 py-1.5"
         >
-          Назад
+          {t("admin.decision.back")}
         </button>
         {error && <span className="basis-full text-[11.5px] text-orange-soft">{error}</span>}
       </div>
@@ -66,14 +68,14 @@ export function DecisionActions({ lessonId }: { lessonId: string }) {
         disabled={busy !== null}
         className="text-[12px] bg-orange hover:bg-orange/90 text-white px-3 py-1.5 rounded transition-colors disabled:opacity-50"
       >
-        {busy === "confirm" ? "..." : "Подтвердить"}
+        {busy === "confirm" ? "..." : t("admin.decision.confirm")}
       </button>
       <button
         onClick={() => setShowReject(true)}
         disabled={busy !== null}
         className="text-[12px] text-muted-on-navy hover:text-orange-soft border border-white/15 hover:border-orange/40 px-2.5 py-1.5 rounded transition-colors disabled:opacity-50"
       >
-        Отклонить
+        {t("admin.decision.reject")}
       </button>
       {error && <span className="basis-full text-[11.5px] text-orange-soft">{error}</span>}
     </div>

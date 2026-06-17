@@ -5,17 +5,21 @@ import { listAdminBookings, countAdminBookings } from "@/lib/admin/bookings";
 import { markStaleConfirmedCompleted } from "@/lib/lessons";
 import { BookingCard } from "@/components/admin/BookingCard";
 import { Pagination } from "@/components/admin/Pagination";
+import { getT } from "@/lib/i18n/server";
 
 const PAGE_SIZE = 10;
 
-export const metadata: Metadata = { title: "Заявки — админка Jedi Drive" };
+export async function generateMetadata(): Promise<Metadata> {
+  const { t } = await getT();
+  return { title: t("admin.bookings.metaTitle") };
+}
 
 const TABS = [
-  { key: "pending", label: "На проверке", kind: "practice" as const },
-  { key: "confirmed", label: "Подтверждённые", kind: "practice" as const },
-  { key: "completed", label: "Проведённые", kind: "practice" as const },
-  { key: "cancelled", label: "Отменённые", kind: "practice" as const },
-  { key: "theory", label: "Заявки на теорию", kind: "theory" as const },
+  { key: "pending", labelKey: "admin.bookings.tab.pending", kind: "practice" as const },
+  { key: "confirmed", labelKey: "admin.bookings.tab.confirmed", kind: "practice" as const },
+  { key: "completed", labelKey: "admin.bookings.tab.completed", kind: "practice" as const },
+  { key: "cancelled", labelKey: "admin.bookings.tab.cancelled", kind: "practice" as const },
+  { key: "theory", labelKey: "admin.bookings.tab.theory", kind: "theory" as const },
 ] as const;
 
 type TabKey = (typeof TABS)[number]["key"];
@@ -26,6 +30,7 @@ export default async function BookingsPage({
   searchParams: Promise<{ status?: string; page?: string }>;
 }) {
   await requireAdminRole(["admin", "moderator"]);
+  const { t } = await getT();
 
   await markStaleConfirmedCompleted();
 
@@ -56,33 +61,33 @@ export default async function BookingsPage({
   return (
     <div className="p-4 sm:p-8 lg:p-10 max-w-[1200px]">
       <div className="mb-2 text-[11px] font-mono text-orange tracking-[0.1em]">
-        МОДЕРАЦИЯ
+        {t("admin.bookings.kicker")}
       </div>
       <h1 className="text-[28px] font-medium tracking-[-0.015em] mb-1">
-        Заявки
+        {t("admin.bookings.title")}
       </h1>
       <p className="text-[13.5px] text-muted-on-navy mb-8">
-        Подтверждай или отклоняй заявки. После решения ученик получает уведомление.
+        {t("admin.bookings.subtitle")}
       </p>
 
       <nav className="flex md:flex-wrap gap-1 border-b border-white/[0.08] mb-6 overflow-x-auto md:overflow-visible overscroll-x-contain touch-pan-x -mx-4 px-4 md:mx-0 md:px-0 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-        {TABS.map((t) => {
-          const active = t.key === tab;
-          const cnt = counts.find((c) => c.key === t.key)?.count ?? 0;
+        {TABS.map((tab2) => {
+          const active = tab2.key === tab;
+          const cnt = counts.find((c) => c.key === tab2.key)?.count ?? 0;
           return (
             <Link
-              key={t.key}
-              href={`/admin/bookings?status=${t.key}`}
+              key={tab2.key}
+              href={`/admin/bookings?status=${tab2.key}`}
               className={`relative shrink-0 px-3 sm:px-4 py-3 text-[13px] whitespace-nowrap transition-colors ${
                 active ? "text-white" : "text-muted-on-navy hover:text-white"
               }`}
             >
               <span className="flex items-center gap-2">
-                {t.label}
+                {t(tab2.labelKey)}
                 {cnt > 0 && (
                   <span
                     className={`text-[10.5px] font-mono tabular-nums px-1.5 py-px rounded ${
-                      t.key === "pending"
+                      tab2.key === "pending"
                         ? "bg-orange text-white"
                         : "bg-white/[0.08] text-muted-on-navy"
                     }`}
@@ -104,7 +109,7 @@ export default async function BookingsPage({
 
       {items.length === 0 ? (
         <div className="text-[13px] text-muted-on-navy bg-white/[0.02] border border-white/[0.06] rounded-lg p-6">
-          В этом разделе пока пусто.
+          {t("admin.bookings.empty")}
         </div>
       ) : (
         <div className="space-y-3">

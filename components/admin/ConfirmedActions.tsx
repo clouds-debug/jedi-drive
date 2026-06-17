@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { RescheduleModal } from "@/components/cabinet/RescheduleModal";
+import { useT } from "@/lib/i18n/client";
 
 type Props = {
   lessonId: string;
@@ -19,13 +20,14 @@ export function ConfirmedActions({
   scheduledAt,
   durationMin,
 }: Props) {
+  const { t } = useT();
   const router = useRouter();
   const [busy, setBusy] = useState<"cancel" | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [showReschedule, setShowReschedule] = useState(false);
 
   async function onCancel() {
-    if (!confirm("Отменить занятие? Ученик получит уведомление.")) return;
+    if (!confirm(t("admin.decision.cancelConfirm"))) return;
     setBusy("cancel");
     setError(null);
     try {
@@ -36,7 +38,7 @@ export function ConfirmedActions({
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
-        setError(data?.error ?? "Не получилось отменить");
+        setError(data?.error ?? t("admin.decision.cantCancel"));
         return;
       }
       router.refresh();
@@ -53,7 +55,7 @@ export function ConfirmedActions({
         disabled={busy !== null}
         className="text-[12px] text-muted-on-navy hover:text-white border border-white/15 hover:border-white/30 px-3 py-1.5 rounded transition-colors disabled:opacity-50"
       >
-        Перенести
+        {t("admin.decision.reschedule")}
       </button>
       <button
         type="button"
@@ -61,7 +63,7 @@ export function ConfirmedActions({
         disabled={busy !== null}
         className="text-[12px] text-orange-soft hover:text-orange border border-orange/30 hover:border-orange/50 px-3 py-1.5 rounded transition-colors disabled:opacity-50"
       >
-        {busy === "cancel" ? "Отменяем..." : "Отменить"}
+        {busy === "cancel" ? t("admin.decision.cancelling") : t("admin.decision.cancel")}
       </button>
       {error && (
         <span className="basis-full text-[11.5px] text-orange-soft mt-1">{error}</span>

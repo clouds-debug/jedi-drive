@@ -1,3 +1,7 @@
+"use client";
+
+import { useT } from "@/lib/i18n/client";
+
 type Row = {
   label: string;
   bookings: number;
@@ -12,6 +16,7 @@ const COLORS = {
 };
 
 export function BarChart({ rows }: { rows: Row[] }) {
+  const { t } = useT();
   const max = Math.max(
     1,
     ...rows.flatMap((r) => [r.bookings, r.completed, r.cancelled]),
@@ -24,9 +29,9 @@ export function BarChart({ rows }: { rows: Row[] }) {
   return (
     <div>
       <div className="flex items-center gap-4 mb-3 text-[11.5px] text-muted-on-navy">
-        <Legend color={COLORS.bookings} label="Заявок" />
-        <Legend color={COLORS.completed} label="Проведено" />
-        <Legend color={COLORS.cancelled} label="Отменено" />
+        <Legend color={COLORS.bookings} label={t("admin.chart.bookings")} />
+        <Legend color={COLORS.completed} label={t("admin.chart.completed")} />
+        <Legend color={COLORS.cancelled} label={t("admin.chart.cancelled")} />
       </div>
 
       <div className="relative w-full h-[220px] bg-white/[0.02] border border-white/[0.06] rounded-lg p-4">

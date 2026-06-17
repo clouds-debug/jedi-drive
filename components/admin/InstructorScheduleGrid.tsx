@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useT } from "@/lib/i18n/client";
 
 type Lesson = {
   id: string;
@@ -23,11 +24,6 @@ type Lesson = {
 
 const TBILISI_OFFSET_MS = 4 * 60 * 60 * 1000;
 const DAYS_AHEAD = 14;
-const RU_WEEKDAYS = ["Вс", "Пн", "Вт", "Ср", "Чт", "Пт", "Сб"] as const;
-const RU_MONTHS = [
-  "янв", "фев", "мар", "апр", "май", "июн",
-  "июл", "авг", "сен", "окт", "ноя", "дек",
-] as const;
 const DAY_START_MIN = 8 * 60 + 45;
 const DAY_LAST_START_MIN = 19 * 60 + 15;
 const STEP_MIN = 45;
@@ -42,37 +38,43 @@ function buildSlotTimes(): string[] {
   return out;
 }
 
-function dayMeta(offset: number) {
-  const tNow = new Date(Date.now() + TBILISI_OFFSET_MS);
-  const d = new Date(
-    Date.UTC(
-      tNow.getUTCFullYear(),
-      tNow.getUTCMonth(),
-      tNow.getUTCDate() + offset,
-    ),
-  );
-  return {
-    weekday:
-      offset === 0
-        ? "Сегодня"
-        : offset === 1
-          ? "Завтра"
-          : RU_WEEKDAYS[d.getUTCDay()],
-    date: `${d.getUTCDate()} ${RU_MONTHS[d.getUTCMonth()]}`,
+function useDayMeta() {
+  const { t } = useT();
+  return (offset: number) => {
+    const tNow = new Date(Date.now() + TBILISI_OFFSET_MS);
+    const d = new Date(
+      Date.UTC(
+        tNow.getUTCFullYear(),
+        tNow.getUTCMonth(),
+        tNow.getUTCDate() + offset,
+      ),
+    );
+    return {
+      weekday:
+        offset === 0
+          ? t("admin.schedule.today")
+          : offset === 1
+            ? t("admin.schedule.tomorrow")
+            : t(`admin.weekdays.short.${d.getUTCDay()}`),
+      date: `${d.getUTCDate()} ${t(`admin.months.short.${d.getUTCMonth()}`)}`,
+    };
   };
 }
 
-function formatRu(kind: string, fmt: string | null): string {
-  if (!fmt) return kind === "theory" ? "Теория" : "Практика";
-  if (kind === "practice") {
-    if (fmt === "pad") return "Площадка";
-    if (fmt === "city") return "Город";
-  }
-  if (kind === "theory") {
-    if (fmt === "group") return "В группе";
-    if (fmt === "individual") return "Индивидуально";
-  }
-  return fmt;
+function useFormatLabel() {
+  const { t } = useT();
+  return (kind: string, fmt: string | null): string => {
+    if (!fmt) return kind === "theory" ? t("admin.kind.theory") : t("admin.kind.practice");
+    if (kind === "practice") {
+      if (fmt === "pad") return t("admin.format.practice.pad");
+      if (fmt === "city") return t("admin.format.practice.city");
+    }
+    if (kind === "theory") {
+      if (fmt === "group") return t("admin.format.theory.group");
+      if (fmt === "individual") return t("admin.format.theory.individual");
+    }
+    return fmt;
+  };
 }
 
 export function InstructorScheduleGrid({
@@ -82,7 +84,9 @@ export function InstructorScheduleGrid({
   initialDay: number;
   initialLessons: Lesson[];
 }) {
+  const { t } = useT();
   const router = useRouter();
+  const dayMeta = useDayMeta();
   const [dayOffset, setDayOffset] = useState(initialDay);
   const [lessons, setLessons] = useState<Lesson[]>(initialLessons);
   const [loading, setLoading] = useState(false);
@@ -94,7 +98,6 @@ export function InstructorScheduleGrid({
   const lessonByTime = useMemo(() => {
     const m = new Map<string, Lesson>();
     for (const l of lessons) {
-      // На сетке слот считается занятым только pending/confirmed.
       if (l.status === "pending" || l.status === "confirmed") {
         m.set(l.hhmm, l);
       }
@@ -102,7 +105,6 @@ export function InstructorScheduleGrid({
     return m;
   }, [lessons]);
 
-  // Lessons not on the standard grid (legacy/edge cases)
   const offGridLessons = useMemo(
     () => lessons.filter((l) => !slotTimes.includes(l.hhmm)),
     [lessons, slotTimes],
@@ -135,9 +137,9 @@ export function InstructorScheduleGrid({
   return (
     <div>
       <div className="text-[10.5px] text-muted-on-navy tracking-[0.16em] uppercase mb-2">
-        Выбери день
+        {t("admin.schedule.pickDay")}
       </div>
-      <DayScroller>
+      <DayScroller backLabel={t("admin.schedule.scrollBack")} nextLabel={t("admin.schedule.scrollNext")}>
         {days.map((d, i) => {
           const active = i === dayOffset;
           return (
@@ -159,12 +161,12 @@ export function InstructorScheduleGrid({
       </DayScroller>
 
       <div className="text-[10.5px] text-muted-on-navy tracking-[0.16em] uppercase mb-2">
-        Рабочее время · 08:45 – 19:15
+        {t("admin.schedule.workingHours")}
       </div>
 
       {loading ? (
         <div className="text-[12.5px] text-muted-on-navy bg-white/[0.02] border border-white/[0.06] rounded-lg p-3">
-          Загружаем…
+          {t("admin.schedule.loading")}
         </div>
       ) : (
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2">
@@ -175,7 +177,7 @@ export function InstructorScheduleGrid({
               ? lesson.guestName
                 ?? ([lesson.userFirstName, lesson.userLastName].filter(Boolean).join(" ") ||
                     lesson.userLogin ||
-                    "Без имени")
+                    t("admin.booking.noName"))
               : "";
             return (
               <button
@@ -198,7 +200,7 @@ export function InstructorScheduleGrid({
                       {lesson?.status === "pending" ? " · ⏳" : ""}
                     </span>
                   ) : (
-                    <span className="text-emerald-300/80">Свободно · занять</span>
+                    <span className="text-emerald-300/80">{t("admin.schedule.freeTake")}</span>
                   )}
                 </div>
               </button>
@@ -210,7 +212,7 @@ export function InstructorScheduleGrid({
       {offGridLessons.length > 0 && (
         <div className="mt-6">
           <div className="text-[10.5px] text-muted-on-navy tracking-[0.16em] uppercase mb-2">
-            Вне расписания
+            {t("admin.schedule.offGrid")}
           </div>
           <div className="space-y-2">
             {offGridLessons.map((l) => (
@@ -236,7 +238,6 @@ export function InstructorScheduleGrid({
           onClose={() => setSelectedSlot(null)}
           onDone={() => {
             setSelectedSlot(null);
-            // Перезагрузить день
             setLessons((prev) => prev);
             triggerReload(dayOffset, setLessons, setLoading);
             router.refresh();
@@ -284,6 +285,7 @@ function GuestBookingModal({
   onClose: () => void;
   onDone: () => void;
 }) {
+  const { t } = useT();
   const [name, setName] = useState("");
   const [contact, setContact] = useState("");
   const [format, setFormat] = useState<"pad" | "city">("pad");
@@ -310,7 +312,7 @@ function GuestBookingModal({
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
-        setError(data?.error ?? "Не получилось");
+        setError(data?.error ?? t("admin.error.generic"));
         return;
       }
       onDone();
@@ -333,17 +335,17 @@ function GuestBookingModal({
           <div className="flex items-start justify-between gap-4 mb-5">
             <div>
               <div className="text-[11px] font-mono text-orange tracking-[0.1em] mb-1">
-                Занять слот · {time}
+                {t("admin.schedule.modal.slotKicker", { time })}
               </div>
               <h3 className="text-[20px] text-white font-medium">
-                Запись без аккаунта
+                {t("admin.schedule.modal.guestTitle")}
               </h3>
             </div>
             <button
               type="button"
               onClick={onClose}
               className="w-8 h-8 grid place-items-center text-muted-on-navy hover:text-white transition-colors"
-              aria-label="Закрыть"
+              aria-label={t("admin.schedule.close")}
             >
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <path d="M6 6l12 12M18 6L6 18" />
@@ -352,18 +354,18 @@ function GuestBookingModal({
           </div>
 
           <p className="text-[12.5px] text-muted-on-navy mb-4">
-            Заявка попадёт в твой календарь со статусом «Подтверждено» — без модерации.
+            {t("admin.schedule.modal.guestNote")}
           </p>
 
           <form onSubmit={submit} className="space-y-4">
             <label className="block">
               <span className="block text-[10.5px] text-muted-on-navy tracking-[0.1em] uppercase mb-1.5">
-                Имя ученика
+                {t("admin.schedule.modal.studentName")}
               </span>
               <input
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                placeholder="Иван Петров"
+                placeholder={t("admin.schedule.modal.studentPlaceholder")}
                 required
                 className="w-full bg-white/[0.04] border border-white/12 rounded-lg px-3.5 py-2.5 text-[14px] text-white placeholder:text-muted-on-navy/60 focus:outline-none focus:border-orange/60"
               />
@@ -371,12 +373,12 @@ function GuestBookingModal({
 
             <label className="block">
               <span className="block text-[10.5px] text-muted-on-navy tracking-[0.1em] uppercase mb-1.5">
-                Контакт (телефон или Telegram)
+                {t("admin.schedule.modal.contact")}
               </span>
               <input
                 value={contact}
                 onChange={(e) => setContact(e.target.value)}
-                placeholder="+995 555 12 34 56 или @username"
+                placeholder={t("admin.schedule.modal.contactPlaceholder")}
                 required
                 className="w-full bg-white/[0.04] border border-white/12 rounded-lg px-3.5 py-2.5 text-[14px] text-white placeholder:text-muted-on-navy/60 focus:outline-none focus:border-orange/60"
               />
@@ -384,12 +386,12 @@ function GuestBookingModal({
 
             <div>
               <span className="block text-[10.5px] text-muted-on-navy tracking-[0.1em] uppercase mb-2">
-                Формат
+                {t("admin.schedule.modal.format")}
               </span>
               <div className="flex gap-2">
                 {[
-                  { v: "pad" as const, label: "Площадка" },
-                  { v: "city" as const, label: "Город" },
+                  { v: "pad" as const, label: t("admin.format.practice.pad") },
+                  { v: "city" as const, label: t("admin.format.practice.city") },
                 ].map((f) => (
                   <button
                     key={f.v}
@@ -409,7 +411,7 @@ function GuestBookingModal({
 
             <label className="block">
               <span className="block text-[10.5px] text-muted-on-navy tracking-[0.1em] uppercase mb-1.5">
-                Комментарий (необязательно)
+                {t("admin.schedule.modal.commentOptional")}
               </span>
               <textarea
                 value={notes}
@@ -433,14 +435,14 @@ function GuestBookingModal({
                 disabled={busy}
                 className="text-[13px] px-4 py-2 rounded-lg text-muted-on-navy hover:text-white transition-colors"
               >
-                Отмена
+                {t("common.cancel")}
               </button>
               <button
                 type="submit"
                 disabled={busy}
                 className="text-[13px] bg-orange hover:bg-orange/90 text-white px-4 py-2 rounded-lg disabled:opacity-60 transition-colors"
               >
-                {busy ? "Сохраняем..." : "Занять слот"}
+                {busy ? t("admin.schedule.modal.saving") : t("admin.schedule.modal.takeSlot")}
               </button>
             </div>
           </form>
@@ -459,18 +461,20 @@ function LessonModal({
   onClose: () => void;
   onDone: () => void;
 }) {
+  const { t } = useT();
+  const formatLabel = useFormatLabel();
   const isGuest = lesson.userId === null;
   const fullName = isGuest
-    ? lesson.guestName ?? "Гость"
+    ? lesson.guestName ?? t("admin.booking.guest")
     : [lesson.userFirstName, lesson.userLastName].filter(Boolean).join(" ") ||
       lesson.userLogin ||
-      "Без имени";
+      t("admin.booking.noName");
 
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   async function decide(action: "confirm" | "reject") {
-    if (action === "reject" && !confirm("Отклонить эту запись? Ученик получит уведомление.")) return;
+    if (action === "reject" && !confirm(t("admin.schedule.modal.confirmReject"))) return;
     setBusy(action);
     setError(null);
     try {
@@ -481,7 +485,7 @@ function LessonModal({
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
-        setError(data?.error ?? "Не получилось");
+        setError(data?.error ?? t("admin.error.generic"));
         return;
       }
       onDone();
@@ -504,14 +508,14 @@ function LessonModal({
           <div className="flex items-start justify-between gap-4 mb-5">
             <div>
               <div className="text-[11px] font-mono text-orange tracking-[0.1em] mb-1">
-                Запись на {lesson.hhmm}
+                {t("admin.schedule.modal.recordOn", { time: lesson.hhmm })}
               </div>
               <h3 className="text-[20px] text-white font-medium">{fullName}</h3>
             </div>
             <button
               onClick={onClose}
               className="w-8 h-8 grid place-items-center text-muted-on-navy hover:text-white transition-colors"
-              aria-label="Закрыть"
+              aria-label={t("admin.schedule.close")}
             >
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <path d="M6 6l12 12M18 6L6 18" />
@@ -522,19 +526,19 @@ function LessonModal({
           <dl className="space-y-2 text-[13px] mb-5">
             {isGuest ? (
               <>
-                <Row label="Тип записи" value="Гость · добавлен инструктором" />
+                <Row label={t("admin.schedule.modal.recordType")} value={t("admin.schedule.modal.recordTypeGuest")} />
                 {lesson.guestContact && (
-                  <Row label="Контакт" value={lesson.guestContact} />
+                  <Row label={t("admin.schedule.modal.contactLabel")} value={lesson.guestContact} />
                 )}
               </>
             ) : (
               <>
                 {lesson.userLogin && (
-                  <Row label="Логин" value={`@${lesson.userLogin}`} />
+                  <Row label={t("admin.schedule.modal.loginLabel")} value={`@${lesson.userLogin}`} />
                 )}
                 {lesson.userPhone && (
                   <Row
-                    label="Телефон"
+                    label={t("admin.schedule.modal.phoneLabel")}
                     value={
                       <a
                         href={`tel:${lesson.userPhone}`}
@@ -547,7 +551,7 @@ function LessonModal({
                 )}
                 {lesson.userTelegram && (
                   <Row
-                    label="Telegram"
+                    label={t("admin.schedule.modal.telegramLabel")}
                     value={
                       <a
                         href={`https://t.me/${lesson.userTelegram}`}
@@ -563,11 +567,11 @@ function LessonModal({
               </>
             )}
             <Row
-              label="Тип"
-              value={`${formatRu(lesson.kind, lesson.format)} · ${lesson.durationMin} мин`}
+              label={t("admin.schedule.modal.typeLabel")}
+              value={`${formatLabel(lesson.kind, lesson.format)} · ${t("admin.booking.durationMin", { min: lesson.durationMin })}`}
             />
-            <Row label="Статус" value={<StatusBadge status={lesson.status} />} />
-            {lesson.notes && <Row label="Комментарий" value={lesson.notes} />}
+            <Row label={t("admin.schedule.modal.statusLabel")} value={<StatusBadge status={lesson.status} />} />
+            {lesson.notes && <Row label={t("admin.schedule.modal.commentLabel")} value={lesson.notes} />}
           </dl>
 
           {error && (
@@ -585,7 +589,7 @@ function LessonModal({
                   disabled={busy !== null}
                   className="text-[13px] bg-orange hover:bg-orange/90 text-white px-3 py-1.5 rounded transition-colors disabled:opacity-50"
                 >
-                  {busy === "confirm" ? "..." : "Подтвердить"}
+                  {busy === "confirm" ? "..." : t("admin.decision.confirm")}
                 </button>
               )}
               <button
@@ -594,7 +598,7 @@ function LessonModal({
                 disabled={busy !== null}
                 className="text-[13px] text-orange-soft hover:text-orange border border-orange/30 hover:border-orange/50 px-3 py-1.5 rounded transition-colors disabled:opacity-50"
               >
-                {busy === "reject" ? "..." : "Отклонить"}
+                {busy === "reject" ? "..." : t("admin.decision.reject")}
               </button>
             </div>
           )}
@@ -616,21 +620,21 @@ function Row({ label, value }: { label: string; value: React.ReactNode }) {
 }
 
 function StatusBadge({ status }: { status: Lesson["status"] }) {
-  const map: Record<Lesson["status"], { label: string; cls: string }> = {
-    pending: { label: "На проверке", cls: "border-orange/40 bg-orange/[0.08] text-orange-soft" },
-    confirmed: { label: "Подтверждено", cls: "border-emerald-500/40 bg-emerald-500/[0.08] text-emerald-300" },
-    completed: { label: "Проведено", cls: "border-white/15 bg-white/[0.04] text-muted-on-navy" },
-    cancelled: { label: "Отменено", cls: "border-red-500/30 bg-red-500/[0.08] text-red-300" },
+  const { t } = useT();
+  const clsMap: Record<Lesson["status"], string> = {
+    pending: "border-orange/40 bg-orange/[0.08] text-orange-soft",
+    confirmed: "border-emerald-500/40 bg-emerald-500/[0.08] text-emerald-300",
+    completed: "border-white/15 bg-white/[0.04] text-muted-on-navy",
+    cancelled: "border-red-500/30 bg-red-500/[0.08] text-red-300",
   };
-  const m = map[status];
   return (
-    <span className={`inline-flex text-[10.5px] font-mono uppercase tracking-[0.1em] border ${m.cls} rounded px-2 py-0.5`}>
-      {m.label}
+    <span className={`inline-flex text-[10.5px] font-mono uppercase tracking-[0.1em] border ${clsMap[status]} rounded px-2 py-0.5`}>
+      {t(`admin.status.${status}`)}
     </span>
   );
 }
 
-function DayScroller({ children }: { children: React.ReactNode }) {
+function DayScroller({ children, backLabel, nextLabel }: { children: React.ReactNode; backLabel: string; nextLabel: string }) {
   const ref = useRef<HTMLDivElement>(null);
   const [canPrev, setCanPrev] = useState(false);
   const [canNext, setCanNext] = useState(true);
@@ -668,7 +672,7 @@ function DayScroller({ children }: { children: React.ReactNode }) {
         type="button"
         onClick={() => scroll("left")}
         disabled={!canPrev}
-        aria-label="Назад"
+        aria-label={backLabel}
         className="shrink-0 w-7 rounded-lg bg-white/[0.03] border border-white/10 text-muted-on-navy hover:text-white hover:border-white/25 grid place-items-center disabled:opacity-30 disabled:pointer-events-none transition-colors"
       >
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
@@ -685,7 +689,7 @@ function DayScroller({ children }: { children: React.ReactNode }) {
         type="button"
         onClick={() => scroll("right")}
         disabled={!canNext}
-        aria-label="Вперёд"
+        aria-label={nextLabel}
         className="shrink-0 w-7 rounded-lg bg-white/[0.03] border border-white/10 text-muted-on-navy hover:text-white hover:border-white/25 grid place-items-center disabled:opacity-30 disabled:pointer-events-none transition-colors"
       >
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">

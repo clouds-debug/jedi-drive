@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { useT } from "@/lib/i18n/client";
 
 type Props = {
   userId: string;
@@ -10,13 +11,14 @@ type Props = {
 };
 
 export function BlockUserButton({ userId, userLogin, isBlocked }: Props) {
+  const { t } = useT();
   const router = useRouter();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   async function toggle() {
     if (isBlocked) {
-      if (!confirm(`Разблокировать @${userLogin}?`)) return;
+      if (!confirm(t("admin.block.confirmUnblock", { login: userLogin }))) return;
       setBusy(true);
       try {
         const res = await fetch(`/api/admin/users/${userId}/block`, {
@@ -26,7 +28,7 @@ export function BlockUserButton({ userId, userLogin, isBlocked }: Props) {
         });
         const data = await res.json().catch(() => ({}));
         if (!res.ok) {
-          setError(data?.error ?? "Не получилось");
+          setError(data?.error ?? t("admin.error.generic"));
           return;
         }
         router.refresh();
@@ -37,8 +39,8 @@ export function BlockUserButton({ userId, userLogin, isBlocked }: Props) {
     }
 
     const reason = prompt(
-      `Заблокировать @${userLogin}? Аккаунт не сможет логиниться и записываться. Последний IP уйдёт в бан-лист.`,
-      "Подозрительная активность",
+      t("admin.block.confirmBlock", { login: userLogin }),
+      t("admin.block.defaultReason"),
     );
     if (reason === null) return;
     setBusy(true);
@@ -51,7 +53,7 @@ export function BlockUserButton({ userId, userLogin, isBlocked }: Props) {
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
-        setError(data?.error ?? "Не получилось");
+        setError(data?.error ?? t("admin.error.generic"));
         return;
       }
       router.refresh();
@@ -72,7 +74,7 @@ export function BlockUserButton({ userId, userLogin, isBlocked }: Props) {
             : "text-red-300 hover:text-red-200 border-red-500/30 hover:border-red-500/50 px-2.5 py-1.5"
         }`}
       >
-        {busy ? "..." : isBlocked ? "Разблокировать" : "Заблокировать"}
+        {busy ? "..." : isBlocked ? t("admin.block.unblock") : t("admin.block.block")}
       </button>
       {error && (
         <span className="text-[11.5px] text-orange-soft">{error}</span>

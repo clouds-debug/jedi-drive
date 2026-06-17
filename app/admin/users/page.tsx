@@ -16,21 +16,25 @@ import { UserRoleActions } from "@/components/admin/UserRoleActions";
 import { BlockUserButton } from "@/components/admin/BlockUserButton";
 import { InstructorVisibilityActions } from "@/components/admin/InstructorVisibilityActions";
 import { Pagination } from "@/components/admin/Pagination";
+import { getT } from "@/lib/i18n/server";
 
 const PAGE_SIZE = 10;
 
-export const metadata: Metadata = { title: "Пользователи — админка Jedi Drive" };
+export async function generateMetadata(): Promise<Metadata> {
+  const { t } = await getT();
+  return { title: t("admin.users.metaTitle") };
+}
 export const dynamic = "force-dynamic";
 
-const TABS: { key: UserRole; label: string }[] = [
-  { key: "student", label: "Пользователи" },
-  { key: "moderator", label: "Модераторы" },
-  { key: "instructor", label: "Инструкторы" },
-  { key: "admin", label: "Администраторы" },
+const TABS: { key: UserRole; labelKey: string }[] = [
+  { key: "student", labelKey: "admin.users.tab.student" },
+  { key: "moderator", labelKey: "admin.users.tab.moderator" },
+  { key: "instructor", labelKey: "admin.users.tab.instructor" },
+  { key: "admin", labelKey: "admin.users.tab.admin" },
 ];
 
-function fmtDate(iso: string) {
-  return new Date(iso).toLocaleDateString("ru-RU", {
+function fmtDate(iso: string, locale: string) {
+  return new Date(iso).toLocaleDateString(locale === "ge" ? "ka-GE" : "ru-RU", {
     day: "2-digit",
     month: "long",
     year: "numeric",
@@ -46,8 +50,9 @@ export default async function UsersPage({
   const me = await requireAdminRole(["admin", "moderator", "instructor"]);
   if (me.role !== "admin") redirect(homePathForRole(me.role));
 
+  const { t, locale } = await getT();
   const sp = await searchParams;
-  const tab: UserRole = (TABS.find((t) => t.key === sp.tab)?.key ?? "student") as UserRole;
+  const tab: UserRole = (TABS.find((tt) => tt.key === sp.tab)?.key ?? "student") as UserRole;
   const search = (sp.q ?? "").trim();
 
   const total = await countAdminUsers({ role: tab, search });
@@ -66,29 +71,29 @@ export default async function UsersPage({
   return (
     <div className="p-4 sm:p-8 lg:p-10 max-w-[1200px]">
       <div className="mb-2 text-[11px] font-mono text-orange tracking-[0.1em]">
-        ПОЛЬЗОВАТЕЛИ
+        {t("admin.users.kicker")}
       </div>
       <h1 className="text-[28px] font-medium tracking-[-0.015em] mb-1">
-        Все аккаунты
+        {t("admin.users.title")}
       </h1>
       <p className="text-[13.5px] text-muted-on-navy mb-7">
-        Меняй роли, блокируй спамеров. Для инструкторов — скрытие из публичной части и полное удаление.
+        {t("admin.users.subtitle")}
       </p>
 
       <nav className="flex md:flex-wrap gap-1 border-b border-white/[0.08] mb-5 overflow-x-auto md:overflow-visible overscroll-x-contain touch-pan-x -mx-4 px-4 md:mx-0 md:px-0 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-        {TABS.map((t) => {
-          const active = t.key === tab;
-          const cnt = counts[t.key] ?? 0;
+        {TABS.map((tt) => {
+          const active = tt.key === tab;
+          const cnt = counts[tt.key] ?? 0;
           return (
             <Link
-              key={t.key}
-              href={`/admin/users?tab=${t.key}${search ? `&q=${encodeURIComponent(search)}` : ""}`}
+              key={tt.key}
+              href={`/admin/users?tab=${tt.key}${search ? `&q=${encodeURIComponent(search)}` : ""}`}
               className={`relative shrink-0 px-3 sm:px-4 py-3 text-[13px] whitespace-nowrap transition-colors ${
                 active ? "text-white" : "text-muted-on-navy hover:text-white"
               }`}
             >
               <span className="flex items-center gap-2">
-                {t.label}
+                {t(tt.labelKey)}
                 <span className="text-[10.5px] font-mono tabular-nums px-1.5 py-px rounded bg-white/[0.06] text-muted-on-navy">
                   {cnt}
                 </span>
@@ -111,7 +116,7 @@ export default async function UsersPage({
             type="search"
             name="q"
             defaultValue={search}
-            placeholder="Поиск по логину…"
+            placeholder={t("admin.users.searchPlaceholder")}
             className="w-full bg-white/[0.04] border border-white/12 rounded-lg pl-9 pr-3 py-2 text-[13.5px] text-white placeholder:text-muted-on-navy/60 focus:outline-none focus:border-orange/60"
           />
           <svg
@@ -131,7 +136,7 @@ export default async function UsersPage({
 
       {items.length === 0 ? (
         <div className="text-[13px] text-muted-on-navy bg-white/[0.02] border border-white/[0.06] rounded-lg p-6">
-          {search ? `Ничего не нашли по «${search}».` : "В этом разделе пока пусто."}
+          {search ? t("admin.users.emptySearch", { q: search }) : t("admin.users.empty")}
         </div>
       ) : (
         <div className="space-y-3">
@@ -149,6 +154,8 @@ export default async function UsersPage({
                     }
                   : null
               }
+              locale={locale}
+              t={t}
             />
           ))}
         </div>
@@ -167,14 +174,17 @@ function UserCard({
   user,
   stats,
   instructorOverride,
+  locale,
+  t,
 }: {
   user: AdminUserRow;
   stats: { pending: number; confirmed: number; completed: number; cancelled: number };
   instructorOverride: { is_hidden: boolean; is_deleted: boolean } | null;
+  locale: string;
+  t: (key: string, params?: Record<string, string | number>) => string;
 }) {
   const fullName =
     [user.first_name, user.last_name].filter(Boolean).join(" ") || user.login;
-  // Для legacy-привязок к data.ts всё ещё показываем имя карточки.
   const linkedInstructor =
     user.role === "instructor" && user.instructor_ref
       ? instructors.find((i) => i.id === user.instructor_ref)
@@ -201,27 +211,27 @@ function UserCard({
         <div className="flex items-center gap-2 shrink-0">
           {user.is_blocked && (
             <span className="text-[10.5px] font-mono uppercase tracking-[0.1em] border border-red-500/40 bg-red-500/[0.1] text-red-300 rounded px-2 py-0.5">
-              Заблокирован
+              {t("admin.users.blocked")}
             </span>
           )}
           {instructorOverride?.is_hidden && !instructorOverride?.is_deleted && (
             <span className="text-[10.5px] font-mono uppercase tracking-[0.1em] border border-white/15 bg-white/[0.04] text-muted-on-navy rounded px-2 py-0.5">
-              Скрыт с сайта
+              {t("admin.users.hidden")}
             </span>
           )}
         </div>
       </div>
 
       <div className="flex flex-wrap items-center gap-x-5 gap-y-1 text-[12px] text-muted-on-navy mb-4">
-        <span>Регистрация: <span className="text-white">{fmtDate(user.created_at)}</span></span>
-        {user.last_ip && <span>· IP: <span className="text-white font-mono text-[11.5px]">{user.last_ip}</span></span>}
+        <span>{t("admin.users.registered")} <span className="text-white">{fmtDate(user.created_at, locale)}</span></span>
+        {user.last_ip && <span>· {t("admin.users.ipLabel")} <span className="text-white font-mono text-[11.5px]">{user.last_ip}</span></span>}
       </div>
 
       <div className="flex flex-wrap gap-2 mb-4 text-[11.5px]">
-        <StatChip label="На проверке" value={stats.pending} accent={stats.pending > 0} />
-        <StatChip label="Подтверждено" value={stats.confirmed} />
-        <StatChip label="Проведено" value={stats.completed} />
-        <StatChip label="Отменено" value={stats.cancelled} />
+        <StatChip label={t("admin.status.pending")} value={stats.pending} accent={stats.pending > 0} />
+        <StatChip label={t("admin.status.confirmed")} value={stats.confirmed} />
+        <StatChip label={t("admin.status.completed")} value={stats.completed} />
+        <StatChip label={t("admin.status.cancelled")} value={stats.cancelled} />
       </div>
 
       <div className="flex flex-wrap items-center gap-3 pt-3 border-t border-white/[0.05]">
