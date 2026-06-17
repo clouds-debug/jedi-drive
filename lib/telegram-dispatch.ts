@@ -4,7 +4,7 @@
 import { query } from "@/lib/db";
 import { getTgModeratorChatIds } from "@/lib/admin/moderators";
 import {
-  editModMessage,
+  deleteModMessage,
   formatBookingCardForMod,
   modCardButtons,
   modChatIds,
@@ -56,32 +56,22 @@ export async function dispatchModBookingCard(d: ModCardData): Promise<void> {
 }
 
 // Когда заявка закрыта вне TG (через веб-админку или инструктором) —
-// дописываем в карточки модераторов финальный статус и снимаем кнопки.
+// удаляем карточки во всех модерских чатах, чтобы не копилась переписка.
 export async function dispatchModCardClose(
   lessonId: string,
-  outcome: "confirmed" | "cancelled",
-  by: string,
+  _outcome: "confirmed" | "cancelled",
+  _by: string,
 ): Promise<void> {
   const rows = await query<{ chat_id: string; message_id: string }>(
     `SELECT chat_id::text, message_id::text FROM tg_mod_messages WHERE lesson_id = $1::bigint`,
     [lessonId],
   );
   if (rows.length === 0) return;
-  const verb = outcome === "confirmed" ? "✅ Подтверждено" : "❌ Отклонено";
-  const ts = new Date().toLocaleTimeString("ru-RU", {
-    hour: "2-digit",
-    minute: "2-digit",
-    timeZone: "Asia/Tbilisi",
-  });
-  const suffix = `\n\n— ${verb} · ${by} · ${ts}`;
   for (const r of rows) {
-    // Текст карточки не сохраняем — просто пишем короткое финальное состояние.
-    // editMessageText без знания старого текста перезапишет всё, поэтому используем
-    // editMessageReplyMarkup чтобы снять кнопки + sendMessage с финалом не нужен.
     try {
-      await editModMessage(Number(r.chat_id), Number(r.message_id), `Заявка закрыта.${suffix}`);
+      await deleteModMessage(Number(r.chat_id), Number(r.message_id));
     } catch (e) {
-      console.error(`[tg-dispatch] close edit failed for ${r.chat_id}/${r.message_id}`, e);
+      console.error(`[tg-dispatch] close delete failed for ${r.chat_id}/${r.message_id}`, e);
     }
   }
   await query(`DELETE FROM tg_mod_messages WHERE lesson_id = $1::bigint`, [lessonId]);

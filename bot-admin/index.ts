@@ -69,6 +69,10 @@ async function editMessage(chatId: number, messageId: number, text: string) {
   });
 }
 
+async function deleteMessage(chatId: number, messageId: number) {
+  return tg("deleteMessage", { chat_id: chatId, message_id: messageId });
+}
+
 async function answerCallback(id: string, text?: string) {
   return tg("answerCallbackQuery", { callback_query_id: id, text: text ?? "" });
 }
@@ -131,13 +135,7 @@ async function handleUpdate(u: Update) {
     }
 
     const verb = action === "confirm" ? "✅ Подтверждено" : "❌ Отклонено";
-    const ts = new Date().toLocaleTimeString("ru-RU", {
-      hour: "2-digit",
-      minute: "2-digit",
-      timeZone: "Asia/Tbilisi",
-    });
-    const newText = `${cq.message.text ?? ""}\n\n— ${verb} · ${modName} · ${ts}`;
-    await editMessage(cq.message.chat.id, cq.message.message_id, newText);
+    await deleteMessage(cq.message.chat.id, cq.message.message_id);
     await answerCallback(cq.id, verb);
     return;
   }

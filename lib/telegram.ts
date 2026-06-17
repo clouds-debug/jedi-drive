@@ -89,6 +89,18 @@ export async function editModMessage(
   });
 }
 
+export async function deleteModMessage(
+  chatId: number,
+  messageId: number,
+): Promise<SendResult> {
+  const token = adminToken();
+  if (!token) return { ok: false, error: "no admin bot token" };
+  return callBot(token, "deleteMessage", {
+    chat_id: chatId,
+    message_id: messageId,
+  });
+}
+
 export async function answerCallback(
   token: string,
   callbackQueryId: string,
