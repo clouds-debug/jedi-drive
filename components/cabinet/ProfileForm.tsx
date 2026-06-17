@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Field } from "./Field";
 import { SubmitButton } from "./SubmitButton";
+import { TelegramLinkButton } from "./TelegramLinkButton";
 import { useT } from "@/lib/i18n/client";
 
 type Profile = {
@@ -11,6 +12,7 @@ type Profile = {
   lastName: string | null;
   phone: string | null;
   telegramUsername: string | null;
+  telegramLinked: boolean;
 };
 
 type Errors = Record<string, string>;
@@ -20,7 +22,7 @@ export function ProfileForm({ initial }: { initial: Profile }) {
   const [firstName, setFirstName] = useState(initial.firstName ?? "");
   const [lastName, setLastName] = useState(initial.lastName ?? "");
   const [phone, setPhone] = useState(initial.phone ?? "");
-  const [telegram, setTelegram] = useState(initial.telegramUsername ?? "");
+  const [telegram] = useState(initial.telegramUsername ?? "");
   const [pending, setPending] = useState(false);
   const [errors, setErrors] = useState<Errors>({});
   const [saved, setSaved] = useState(false);
@@ -96,15 +98,15 @@ export function ProfileForm({ initial }: { initial: Profile }) {
         placeholder={t("cab.profile.field.phone.placeholder")}
         error={errors.phone}
       />
-      <Field
-        id="telegram"
-        label={t("cab.profile.field.telegram")}
-        value={telegram}
-        onChange={(e) => setTelegram(e.target.value)}
-        placeholder={t("cab.profile.field.telegram.placeholder")}
-        hint={t("cab.profile.field.telegram.hint")}
-        error={errors.telegramUsername}
-      />
+      <div>
+        <div className="text-[11px] text-muted-on-navy tracking-[0.04em] uppercase mb-1.5">
+          Telegram
+        </div>
+        <TelegramLinkButton initialLinked={initial.telegramLinked} />
+        <div className="text-[11px] text-muted-on-navy/80 mt-1.5">
+          Привяжи бота — будешь получать уведомления о заявках в чат.
+        </div>
+      </div>
 
       {errors.form && (
         <div className="lg:col-span-2 text-[12.5px] text-orange-soft border border-orange/30 bg-orange/[0.06] rounded-lg px-3 py-2">
