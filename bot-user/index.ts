@@ -1,7 +1,15 @@
 // Jedi Drive — Telegram bot for students.
 // Запуск: pm2 start "npx tsx --env-file=.env.local bot-user/index.ts" --name jedi-bot-user
 
-import { botT, isBotLang, langKeyboard, type BotLang } from "../lib/bot-i18n";
+import {
+  botT,
+  isBotLang,
+  langKeyboard,
+  persistentLangReplyMarkup,
+  LANG_BTN_RU,
+  LANG_BTN_GE,
+  type BotLang,
+} from "../lib/bot-i18n";
 
 const TOKEN = process.env.TELEGRAM_USER_BOT_TOKEN;
 const INTERNAL = process.env.INTERNAL_API_TOKEN;
@@ -139,11 +147,26 @@ async function handleUpdate(u: Update) {
     if (status.linked) {
       const lang = await getLang(chatId);
       const hi = status.firstName ? `, ${status.firstName}` : "";
-      await sendMessage(chatId, botT(lang, "user.start.linked", { hi }));
+      await sendMessage(chatId, botT(lang, "user.start.linked", { hi }), persistentLangReplyMarkup());
     } else {
-      // ещё не привязан — язык в БД ещё нет, используем ru
       await sendMessage(chatId, botT("ru", "user.start.unlinked"));
     }
+    return;
+  }
+
+  // постоянные кнопки внизу чата
+  if (text === LANG_BTN_RU || text === LANG_BTN_GE) {
+    const newLang: BotLang = text === LANG_BTN_GE ? "ge" : "ru";
+    const setRes = await internalPost(`/api/internal/tg-lang`, {
+      kind: "user",
+      chatId,
+      lang: newLang,
+    });
+    if (!setRes?.ok) {
+      await sendMessage(chatId, botT(newLang, "user.start.unlinked"));
+      return;
+    }
+    await sendMessage(chatId, botT(newLang, `lang.set.${newLang}`), persistentLangReplyMarkup());
     return;
   }
 
@@ -155,7 +178,7 @@ async function handleUpdate(u: Update) {
     const lang = await getLang(chatId);
     if (r?.ok) {
       const hi = r.firstName ? `, ${r.firstName}` : "";
-      await sendMessage(chatId, botT(lang, "user.bound.ok", { hi }));
+      await sendMessage(chatId, botT(lang, "user.bound.ok", { hi }), persistentLangReplyMarkup());
     } else {
       await sendMessage(chatId, r?.message ?? botT(lang, "user.bound.fail"));
     }

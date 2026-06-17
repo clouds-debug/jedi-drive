@@ -1,7 +1,15 @@
 // Jedi Drive — Telegram bot for moderators (inline-buttons over booking cards).
 // Запуск: pm2 start "npx tsx --env-file=.env.local bot-admin/index.ts" --name jedi-bot-admin
 
-import { botT, isBotLang, langKeyboard, type BotLang } from "../lib/bot-i18n";
+import {
+  botT,
+  isBotLang,
+  langKeyboard,
+  persistentLangReplyMarkup,
+  LANG_BTN_RU,
+  LANG_BTN_GE,
+  type BotLang,
+} from "../lib/bot-i18n";
 
 const TOKEN = process.env.TELEGRAM_ADMIN_BOT_TOKEN;
 const INTERNAL = process.env.INTERNAL_API_TOKEN;
@@ -167,7 +175,22 @@ async function handleUpdate(u: Update) {
 
     if (text === "/start") {
       const lang = await getLang(chatId);
-      await sendMessage(chatId, botT(lang, "mod.start", { chatId }));
+      await sendMessage(chatId, botT(lang, "mod.start", { chatId }), persistentLangReplyMarkup());
+      return;
+    }
+
+    if (text === LANG_BTN_RU || text === LANG_BTN_GE) {
+      const newLang: BotLang = text === LANG_BTN_GE ? "ge" : "ru";
+      const setRes = await internalPost(`/api/internal/tg-lang`, {
+        kind: "mod",
+        chatId,
+        lang: newLang,
+      });
+      if (!setRes?.ok) {
+        await sendMessage(chatId, "Сначала добавь себя через /start");
+        return;
+      }
+      await sendMessage(chatId, botT(newLang, `lang.set.${newLang}`), persistentLangReplyMarkup());
       return;
     }
 

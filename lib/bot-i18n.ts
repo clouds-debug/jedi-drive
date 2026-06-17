@@ -94,3 +94,17 @@ export function langKeyboard() {
     ],
   ];
 }
+
+// Постоянная клавиатура внизу чата с двумя кнопками — текст которых стабилен
+// (не зависит от текущего языка пользователя), чтобы кнопки выглядели одинаково
+// у всех. При тапе бот ловит этот текст и переключает язык.
+export const LANG_BTN_RU = "🇷🇺 Русский";
+export const LANG_BTN_GE = "🇬🇪 ქართული";
+
+export function persistentLangReplyMarkup() {
+  return {
+    keyboard: [[{ text: LANG_BTN_RU }, { text: LANG_BTN_GE }]],
+    resize_keyboard: true,
+    is_persistent: true,
+  };
+}
