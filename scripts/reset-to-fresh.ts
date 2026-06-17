@@ -27,29 +27,24 @@ if (passErr) {
 async function main() {
   console.log("Wiping data...");
 
-  await query(`TRUNCATE TABLE notifications RESTART IDENTITY CASCADE`);
-  console.log("  notifications cleared");
-
-  await query(`TRUNCATE TABLE lessons RESTART IDENTITY CASCADE`);
-  console.log("  lessons cleared");
-
-  await query(`TRUNCATE TABLE sessions RESTART IDENTITY CASCADE`);
-  console.log("  sessions cleared");
-
-  await query(`TRUNCATE TABLE reviews RESTART IDENTITY CASCADE`).catch(() => {});
-  console.log("  reviews cleared");
-
-  await query(`TRUNCATE TABLE blocked_ips RESTART IDENTITY CASCADE`).catch(() => {});
-  console.log("  blocked_ips cleared");
-
-  await query(`TRUNCATE TABLE blocked_chat_ids RESTART IDENTITY CASCADE`).catch(() => {});
-  console.log("  blocked_chat_ids cleared");
-
-  await query(`TRUNCATE TABLE tg_mod_messages RESTART IDENTITY CASCADE`).catch(() => {});
-  console.log("  tg_mod_messages cleared");
-
-  await query(`TRUNCATE TABLE tg_moderators RESTART IDENTITY CASCADE`).catch(() => {});
-  console.log("  tg_moderators cleared");
+  const tables = [
+    "notifications",
+    "lessons",
+    "sessions",
+    "reviews",
+    "blocked_ips",
+    "blocked_chat_ids",
+    "tg_mod_messages",
+    "tg_moderators",
+  ];
+  for (const t of tables) {
+    try {
+      await query(`DELETE FROM ${t}`);
+      console.log(`  ${t} cleared`);
+    } catch (e) {
+      console.log(`  ${t} skipped (${(e as Error).message})`);
+    }
+  }
 
   await query(`DELETE FROM users`);
   console.log("  users cleared");
