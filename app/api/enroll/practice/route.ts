@@ -146,6 +146,7 @@ export async function POST(req: NextRequest) {
       fullName,
       login: me.login,
       phone: me.phone,
+      telegramUsername: me.telegram_username,
       scheduledAt: new Date(scheduledAt),
       instructorName: body.instructorName,
       format: body.format,

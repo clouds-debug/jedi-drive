@@ -22,6 +22,7 @@ type Update = {
   message?: {
     message_id: number;
     chat: { id: number };
+    from?: { id: number; username?: string; first_name?: string };
     text?: string;
   };
 };
@@ -49,7 +50,7 @@ async function sendMessage(chatId: number, text: string) {
   });
 }
 
-async function callLink(token: string, chatId: number) {
+async function callLink(token: string, chatId: number, username: string | null) {
   try {
     const r = await fetch(`${BASE}/api/internal/tg-link`, {
       method: "POST",
@@ -57,7 +58,7 @@ async function callLink(token: string, chatId: number) {
         "content-type": "application/json",
         authorization: `Bearer ${INTERNAL}`,
       },
-      body: JSON.stringify({ token, chatId }),
+      body: JSON.stringify({ token, chatId, username }),
     });
     return (await r.json()) as {
       ok: boolean;
@@ -87,7 +88,8 @@ async function handleUpdate(u: Update) {
   const m = text.match(/^\/start\s+(\S+)$/);
   if (m) {
     const token = m[1];
-    const r = await callLink(token, chatId);
+    const username = msg.from?.username ?? null;
+    const r = await callLink(token, chatId, username);
     if (r.ok) {
       const hi = r.firstName ? `, ${r.firstName}` : "";
       await sendMessage(

@@ -7,6 +7,7 @@ export type AdminLessonRow = {
   user_first_name: string | null;
   user_last_name: string | null;
   user_phone: string | null;
+  user_telegram_username: string | null;
   user_is_blocked: boolean;
   guest_name: string | null;
   guest_contact: string | null;
@@ -24,6 +25,7 @@ export type AdminLessonRow = {
 
 const SELECT = `l.id::text, l.user_id::text,
   u.login AS user_login, u.first_name AS user_first_name, u.last_name AS user_last_name, u.phone AS user_phone,
+  u.telegram_username AS user_telegram_username,
   COALESCE(u.is_blocked, false) AS user_is_blocked,
   l.guest_name, l.guest_contact,
   l.kind, l.format, l.instructor_id, l.instructor_name,

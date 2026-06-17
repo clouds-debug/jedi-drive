@@ -15,6 +15,7 @@ type ModCardData = {
   fullName: string;
   login: string | null;
   phone: string | null;
+  telegramUsername: string | null;
   scheduledAt: Date;
   instructorName: string | null;
   format: string | null;

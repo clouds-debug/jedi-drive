@@ -19,7 +19,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok: false, error: "unauthorized" }, { status: 401 });
   }
 
-  let body: { token?: string; chatId?: number };
+  let body: { token?: string; chatId?: number; username?: string | null };
   try {
     body = (await req.json()) as typeof body;
   } catch {
@@ -27,6 +27,7 @@ export async function POST(req: Request) {
   }
   const token = (body.token ?? "").trim();
   const chatId = Number(body.chatId);
+  const username = (body.username ?? "").trim() || null;
   if (!token || !Number.isFinite(chatId)) {
     return NextResponse.json({ ok: false, error: "missing token or chatId" }, { status: 400 });
   }
@@ -85,10 +86,11 @@ export async function POST(req: Request) {
   await query(
     `UPDATE users
      SET telegram_chat_id = $1,
+         telegram_username = COALESCE($2, telegram_username),
          telegram_link_token = NULL,
          telegram_link_token_at = NULL
-     WHERE id = $2::bigint`,
-    [chatId, u.id],
+     WHERE id = $3::bigint`,
+    [chatId, username, u.id],
   );
 
   return NextResponse.json({

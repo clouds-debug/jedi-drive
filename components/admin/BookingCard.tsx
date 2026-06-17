@@ -117,9 +117,27 @@ export function BookingCard({
                 )}
               </div>
               <div className="text-[11.5px] text-muted-on-navy truncate">
-                {isGuest
-                  ? lesson.guest_contact ?? "—"
-                  : `@${lesson.user_login}${lesson.user_phone ? ` · ${lesson.user_phone}` : ""}`}
+                {isGuest ? (
+                  lesson.guest_contact ?? "—"
+                ) : (
+                  <>
+                    @{lesson.user_login}
+                    {lesson.user_phone ? ` · ${lesson.user_phone}` : ""}
+                    {lesson.user_telegram_username ? (
+                      <>
+                        {" · "}
+                        <a
+                          href={`https://t.me/${lesson.user_telegram_username}`}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="text-orange-soft hover:underline"
+                        >
+                          tg: @{lesson.user_telegram_username}
+                        </a>
+                      </>
+                    ) : null}
+                  </>
+                )}
               </div>
             </div>
           </div>

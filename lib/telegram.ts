@@ -112,6 +112,7 @@ export function formatBookingCardForMod(b: {
   fullName: string;
   login: string | null;
   phone: string | null;
+  telegramUsername: string | null;
   scheduledAt: Date;
   instructorName: string | null;
   format: string | null;
@@ -129,10 +130,14 @@ export function formatBookingCardForMod(b: {
     : b.format === "city" ? "Город"
       : b.format === "pad+city" ? "Площадка + город"
         : (b.format ?? "—");
+  const contactBits: string[] = [];
+  if (b.phone) contactBits.push(esc(b.phone));
+  if (b.telegramUsername) contactBits.push(`<a href="https://t.me/${esc(b.telegramUsername)}">tg @${esc(b.telegramUsername)}</a>`);
+  const contact = contactBits.length ? ` · ${contactBits.join(" · ")}` : "";
   const lines = [
     `🔔 <b>Новая заявка на практику</b>`,
     ``,
-    `👤 ${esc(b.fullName)}` + (b.login ? ` (@${esc(b.login)})` : "") + (b.phone ? `, ${esc(b.phone)}` : ""),
+    `👤 ${esc(b.fullName)}` + (b.login ? ` (@${esc(b.login)})` : "") + contact,
     `📅 ${esc(date)}`,
     `🚗 ${esc(b.instructorName ?? "—")} · ${esc(fmtRu)}`,
   ];
