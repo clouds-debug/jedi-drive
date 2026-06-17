@@ -9,6 +9,8 @@ export type AdminLessonRow = {
   user_phone: string | null;
   user_telegram_username: string | null;
   user_is_blocked: boolean;
+  user_attendance: "coming" | "not_coming" | null;
+  attendance_handled_at: string | null;
   guest_name: string | null;
   guest_contact: string | null;
   kind: "theory" | "practice";
@@ -27,6 +29,7 @@ const SELECT = `l.id::text, l.user_id::text,
   u.login AS user_login, u.first_name AS user_first_name, u.last_name AS user_last_name, u.phone AS user_phone,
   u.telegram_username AS user_telegram_username,
   COALESCE(u.is_blocked, false) AS user_is_blocked,
+  l.user_attendance, l.attendance_handled_at,
   l.guest_name, l.guest_contact,
   l.kind, l.format, l.instructor_id, l.instructor_name,
   l.scheduled_at, l.duration_min, l.location, l.status, l.notes, l.created_at`;
@@ -35,11 +38,12 @@ type ListOpts = {
   status?: "pending" | "confirmed" | "completed" | "cancelled";
   kind?: "theory" | "practice";
   instructorRef?: string;
+  attendancePending?: boolean;
   limit?: number;
   offset?: number;
 };
 
-function buildWhere(opts: Pick<ListOpts, "status" | "kind" | "instructorRef">) {
+function buildWhere(opts: Pick<ListOpts, "status" | "kind" | "instructorRef" | "attendancePending">) {
   const where: string[] = [];
   const params: unknown[] = [];
   if (opts.status) {
@@ -54,6 +58,9 @@ function buildWhere(opts: Pick<ListOpts, "status" | "kind" | "instructorRef">) {
     params.push(opts.instructorRef);
     where.push(`l.instructor_id = $${params.length}`);
   }
+  if (opts.attendancePending) {
+    where.push(`l.user_attendance IS NOT NULL AND l.attendance_handled_at IS NULL`);
+  }
   return { where, params };
 }
 
@@ -61,10 +68,11 @@ export async function listAdminBookings({
   status,
   kind,
   instructorRef,
+  attendancePending,
   limit = 30,
   offset = 0,
 }: ListOpts): Promise<AdminLessonRow[]> {
-  const { where, params } = buildWhere({ status, kind, instructorRef });
+  const { where, params } = buildWhere({ status, kind, instructorRef, attendancePending });
   params.push(limit);
   params.push(offset);
   const whereSql = where.length ? `WHERE ${where.join(" AND ")}` : "";
@@ -88,8 +96,9 @@ export async function countAdminBookings({
   status,
   kind,
   instructorRef,
-}: Pick<ListOpts, "status" | "kind" | "instructorRef">): Promise<number> {
-  const { where, params } = buildWhere({ status, kind, instructorRef });
+  attendancePending,
+}: Pick<ListOpts, "status" | "kind" | "instructorRef" | "attendancePending">): Promise<number> {
+  const { where, params } = buildWhere({ status, kind, instructorRef, attendancePending });
   const whereSql = where.length ? `WHERE ${where.join(" AND ")}` : "";
   const rows = await query<{ c: string }>(
     `SELECT count(*)::text AS c FROM lessons l ${whereSql}`,

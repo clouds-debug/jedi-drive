@@ -137,6 +137,23 @@ async function handleUpdate(u: Update) {
       return;
     }
 
+    // действия по карточке ответа ученика
+    const attMatch = data.match(/^att-(handled|cancel):(.+)$/);
+    if (attMatch && cq.message) {
+      const action = attMatch[1] === "cancel" ? "cancel" : "handled";
+      const lessonId = attMatch[2];
+      const lang = await getLang(cq.message.chat.id);
+      const r = await internalPost(`/api/internal/attendance-action`, { lessonId, action });
+      if (!r?.ok) {
+        await answerCallback(cq.id, botT(lang, "mod.cb.error"));
+        return;
+      }
+      await deleteMessage(cq.message.chat.id, cq.message.message_id);
+      const tKey = action === "cancel" ? "att.cb.cancelled" : "att.cb.handled";
+      await answerCallback(cq.id, botT(lang, tKey));
+      return;
+    }
+
     // решение
     const decisionMatch = data.match(/^(confirm|reject):(.+)$/);
     if (!decisionMatch || !cq.message) {

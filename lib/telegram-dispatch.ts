@@ -5,7 +5,9 @@ import { query } from "@/lib/db";
 import { getTgModeratorChatIds } from "@/lib/admin/moderators";
 import { isBotLang, type BotLang } from "@/lib/bot-i18n";
 import {
+  attendanceCardButtons,
   deleteModMessage,
+  formatAttendanceCardForMod,
   formatBookingCardForMod,
   modCardButtons,
   modChatIds,
@@ -66,6 +68,39 @@ export async function dispatchModBookingCard(d: ModCardData): Promise<void> {
       }
     } catch (e) {
       console.error(`[tg-dispatch] mod card to ${chatId} failed`, e);
+    }
+  }
+}
+
+type AttendanceCardData = {
+  lessonId: string;
+  fullName: string;
+  login: string | null;
+  phone: string | null;
+  telegramUsername: string | null;
+  scheduledAt: Date;
+  instructorName: string | null;
+  format: string | null;
+  response: "coming" | "not_coming";
+};
+
+export async function dispatchAttendanceCard(d: AttendanceCardData): Promise<void> {
+  const chats = await effectiveModChats();
+  if (chats.length === 0) return;
+  for (const chatId of chats) {
+    try {
+      const lang = await getModLang(chatId);
+      const text = formatAttendanceCardForMod(d, lang);
+      const buttons = attendanceCardButtons(d.lessonId, d.response, lang);
+      const res = await sendModMessage(chatId, text, buttons);
+      if (res.ok && res.messageId) {
+        await query(
+          `INSERT INTO tg_mod_messages (lesson_id, chat_id, message_id) VALUES ($1::bigint, $2, $3)`,
+          [d.lessonId, chatId, res.messageId],
+        );
+      }
+    } catch (e) {
+      console.error(`[tg-dispatch] attendance card to ${chatId} failed`, e);
     }
   }
 }

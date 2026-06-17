@@ -177,3 +177,58 @@ export function modCardButtons(lessonId: string, lang: BotLang = "ru"): ModInlin
   }
   return rows;
 }
+
+// Карточка ответа ученика на напоминание (для модераторов)
+export function formatAttendanceCardForMod(
+  d: {
+    fullName: string;
+    login: string | null;
+    phone: string | null;
+    telegramUsername: string | null;
+    scheduledAt: Date;
+    instructorName: string | null;
+    format: string | null;
+    response: "coming" | "not_coming";
+  },
+  lang: BotLang = "ru",
+): string {
+  const intlLocale = lang === "ge" ? "ka-GE" : "ru-RU";
+  const date = d.scheduledAt.toLocaleString(intlLocale, {
+    weekday: "short",
+    day: "2-digit",
+    month: "long",
+    hour: "2-digit",
+    minute: "2-digit",
+    timeZone: "Asia/Tbilisi",
+  });
+  const fmtLabel = d.format === "pad" ? botT(lang, "card.format.pad")
+    : d.format === "city" ? botT(lang, "card.format.city")
+      : d.format === "pad+city" ? botT(lang, "card.format.padCity")
+        : (d.format ?? "—");
+  const contactBits: string[] = [];
+  if (d.phone) contactBits.push(esc(d.phone));
+  if (d.telegramUsername) contactBits.push(`<a href="https://t.me/${esc(d.telegramUsername)}">tg @${esc(d.telegramUsername)}</a>`);
+  const contact = contactBits.length ? ` · ${contactBits.join(" · ")}` : "";
+  const lines = [
+    botT(lang, d.response === "coming" ? "att.title.coming" : "att.title.notComing"),
+    ``,
+    `👤 ${esc(d.fullName)}` + (d.login ? ` (@${esc(d.login)})` : "") + contact,
+    `📅 ${esc(date)}`,
+    `🚗 ${esc(d.instructorName ?? "—")} · ${esc(fmtLabel)}`,
+  ];
+  return lines.join("\n");
+}
+
+export function attendanceCardButtons(
+  lessonId: string,
+  response: "coming" | "not_coming",
+  lang: BotLang = "ru",
+): ModInlineButton[][] {
+  const rows: ModInlineButton[][] = [
+    [{ text: botT(lang, "att.btn.handled"), callback_data: `att-handled:${lessonId}` }],
+  ];
+  if (response === "not_coming") {
+    rows[0].push({ text: botT(lang, "att.btn.cancel"), callback_data: `att-cancel:${lessonId}` });
+  }
+  return rows;
+}

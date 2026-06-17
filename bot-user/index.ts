@@ -111,28 +111,55 @@ async function callLink(token: string, chatId: number, username: string | null) 
 }
 
 async function handleUpdate(u: Update) {
-  // callback (язык)
   if (u.callback_query) {
     const cq = u.callback_query;
     const data = cq.data ?? "";
-    const m = data.match(/^lang:(ru|ge)$/);
-    if (!m || !cq.message) {
+
+    // язык
+    const langMatch = data.match(/^lang:(ru|ge)$/);
+    if (langMatch && cq.message) {
+      const newLang = langMatch[1] as BotLang;
+      const chatId = cq.message.chat.id;
+      const setRes = await internalPost(`/api/internal/tg-lang`, {
+        kind: "user",
+        chatId,
+        lang: newLang,
+      });
+      if (!setRes?.ok) {
+        await answerCallback(cq.id, botT(newLang, "user.start.unlinked").replace(/<[^>]+>/g, ""));
+        return;
+      }
+      await sendMessage(chatId, botT(newLang, `lang.set.${newLang}`));
       await answerCallback(cq.id);
       return;
     }
-    const newLang = m[1] as BotLang;
-    const chatId = cq.message.chat.id;
-    const setRes = await internalPost(`/api/internal/tg-lang`, {
-      kind: "user",
-      chatId,
-      lang: newLang,
-    });
-    if (!setRes?.ok) {
-      // не привязан — предложить привязать сначала
-      await answerCallback(cq.id, botT(newLang, "user.start.unlinked").replace(/<[^>]+>/g, ""));
+
+    // подтверждение посещения
+    const attendMatch = data.match(/^attend:(yes|no):(.+)$/);
+    if (attendMatch && cq.message) {
+      const response = attendMatch[1] === "yes" ? "coming" : "not_coming";
+      const lessonId = attendMatch[2];
+      const chatId = cq.message.chat.id;
+      const lang = await getLang(chatId);
+      const r = await internalPost(`/api/internal/attendance`, {
+        lessonId,
+        response,
+        chatId,
+      });
+      if (r?.ok) {
+        // убираем кнопки и пишем ack
+        await tg("editMessageReplyMarkup", {
+          chat_id: chatId,
+          message_id: cq.message.message_id,
+          reply_markup: { inline_keyboard: [] },
+        });
+        const ackKey = response === "coming" ? "remind.ack.coming" : "remind.ack.notComing";
+        await sendMessage(chatId, botT(lang, ackKey));
+      }
+      await answerCallback(cq.id, botT(lang, `remind.btn.${response === "coming" ? "coming" : "notComing"}`));
       return;
     }
-    await sendMessage(chatId, botT(newLang, `lang.set.${newLang}`));
+
     await answerCallback(cq.id);
     return;
   }
@@ -199,6 +226,16 @@ async function handleUpdate(u: Update) {
     return;
   }
 }
+
+// Тик напоминаний: раз в 10 минут дёргаем endpoint, который сам решит кого уведомить.
+const REMINDER_TICK_MS = 10 * 60 * 1000;
+setInterval(() => {
+  internalPost("/api/internal/tick-reminders", {})
+    .then((r) => {
+      if (r?.sent) console.log(`[reminders] sent=${r.sent} skipped=${r.skipped}`);
+    })
+    .catch((e) => console.error("[reminders] tick failed", e));
+}, REMINDER_TICK_MS);
 
 async function loop() {
   let offset = 0;

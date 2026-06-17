@@ -17,6 +17,7 @@ export async function generateMetadata(): Promise<Metadata> {
 const TABS = [
   { key: "pending", labelKey: "admin.bookings.tab.pending", kind: "practice" as const },
   { key: "confirmed", labelKey: "admin.bookings.tab.confirmed", kind: "practice" as const },
+  { key: "attendance", labelKey: "admin.bookings.tab.attendance", kind: "practice" as const },
   { key: "completed", labelKey: "admin.bookings.tab.completed", kind: "practice" as const },
   { key: "cancelled", labelKey: "admin.bookings.tab.cancelled", kind: "practice" as const },
   { key: "theory", labelKey: "admin.bookings.tab.theory", kind: "theory" as const },
@@ -37,22 +38,30 @@ export default async function BookingsPage({
   const sp = await searchParams;
   const tab: TabKey = (TABS.find((t) => t.key === sp.status)?.key ?? "pending") as TabKey;
   const activeTab = TABS.find((t) => t.key === tab)!;
-  const status = activeTab.kind === "practice" ? (tab as "pending" | "confirmed" | "completed" | "cancelled") : undefined;
+  const isAttendance = tab === "attendance";
+  const status = !isAttendance && activeTab.kind === "practice"
+    ? (tab as "pending" | "confirmed" | "completed" | "cancelled")
+    : undefined;
+  const opts = isAttendance
+    ? { kind: "practice" as const, attendancePending: true }
+    : { status, kind: activeTab.kind };
 
-  const total = await countAdminBookings({ status, kind: activeTab.kind });
+  const total = await countAdminBookings(opts);
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
   const page = Math.min(totalPages, Math.max(1, parseInt(sp.page ?? "1", 10) || 1));
   const offset = (page - 1) * PAGE_SIZE;
 
   const [items, counts] = await Promise.all([
-    listAdminBookings({ status, kind: activeTab.kind, limit: PAGE_SIZE, offset }),
+    listAdminBookings({ ...opts, limit: PAGE_SIZE, offset }),
     Promise.all(
       TABS.map(async (t) => ({
         key: t.key,
         count: await countAdminBookings(
-          t.kind === "practice"
-            ? { status: t.key as "pending" | "confirmed" | "completed" | "cancelled", kind: "practice" }
-            : { kind: "theory" },
+          t.key === "attendance"
+            ? { kind: "practice", attendancePending: true }
+            : t.kind === "practice"
+              ? { status: t.key as "pending" | "confirmed" | "completed" | "cancelled", kind: "practice" }
+              : { kind: "theory" },
         ),
       })),
     ),
@@ -118,6 +127,7 @@ export default async function BookingsPage({
               key={lesson.id}
               lesson={lesson}
               showActions={
+                isAttendance ||
                 (activeTab.kind === "practice" &&
                   (status === "pending" || status === "confirmed")) ||
                 activeTab.kind === "theory"
