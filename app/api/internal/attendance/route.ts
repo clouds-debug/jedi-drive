@@ -1,22 +1,17 @@
 import { NextResponse } from "next/server";
 import { query } from "@/lib/db";
 import { dispatchAttendanceCard } from "@/lib/telegram-dispatch";
+import { checkInternalAuth } from "@/lib/internal-auth";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-function authorized(req: Request): boolean {
-  const expected = process.env.INTERNAL_API_TOKEN;
-  if (!expected) return false;
-  const got = req.headers.get("authorization") ?? "";
-  return got === `Bearer ${expected}`;
-}
 
 // POST /api/internal/attendance
 // Body: { lessonId, response: 'coming'|'not_coming', chatId }
 // chatId — для верификации (что это именно владелец занятия)
 export async function POST(req: Request) {
-  if (!authorized(req)) {
+  if (!checkInternalAuth(req)) {
     return NextResponse.json({ ok: false, error: "unauthorized" }, { status: 401 });
   }
   let body: { lessonId?: string; response?: string; chatId?: number };

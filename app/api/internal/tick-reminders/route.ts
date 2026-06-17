@@ -1,16 +1,12 @@
 import { NextResponse } from "next/server";
 import { query } from "@/lib/db";
 import { botT, isBotLang, type BotLang } from "@/lib/bot-i18n";
+import { checkInternalAuth } from "@/lib/internal-auth";
+import { markStaleConfirmedCompleted } from "@/lib/lessons";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-function authorized(req: Request): boolean {
-  const expected = process.env.INTERNAL_API_TOKEN;
-  if (!expected) return false;
-  const got = req.headers.get("authorization") ?? "";
-  return got === `Bearer ${expected}`;
-}
 
 type Candidate = {
   id: string;
@@ -73,9 +69,13 @@ function fmtCardText(
 }
 
 export async function POST(req: Request) {
-  if (!authorized(req)) {
+  if (!checkInternalAuth(req)) {
     return NextResponse.json({ ok: false, error: "unauthorized" }, { status: 401 });
   }
+
+  // Заодно с тиком — добиваем прошедшие confirmed → completed.
+  // Раньше это вызывалось на каждой странице через GET, что было side-effect-ом.
+  await markStaleConfirmedCompleted().catch(() => {});
 
   // Берём все confirmed practice занятия в ближайшие 30 часов, у которых
   // user_attendance ещё не выставлен и юзер привязан к TG.

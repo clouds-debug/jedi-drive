@@ -4,7 +4,6 @@ import { HistoryList } from "@/components/cabinet/HistoryList";
 import {
   countHistory,
   listHistory,
-  markStaleConfirmedCompleted,
 } from "@/lib/lessons";
 import { listActiveReviewedInstructors } from "@/lib/reviews";
 import { readSession } from "@/lib/auth/session";
@@ -28,8 +27,6 @@ export const metadata: Metadata = { title: "История занятий — Je
 export default async function HistoryPage() {
   const session = await readSession();
   if (!session) redirect("/cabinet/login");
-
-  await markStaleConfirmedCompleted();
 
   const [history, total, reviewedSet, { t, locale }] = await Promise.all([
     listHistory(session.userId, PAGE_SIZE),

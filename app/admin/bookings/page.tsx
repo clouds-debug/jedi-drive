@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { requireAdminRole } from "@/lib/auth/require";
 import { listAdminBookings, countAdminBookings } from "@/lib/admin/bookings";
-import { markStaleConfirmedCompleted } from "@/lib/lessons";
 import { BookingCard } from "@/components/admin/BookingCard";
 import { Pagination } from "@/components/admin/Pagination";
 import { getT } from "@/lib/i18n/server";
@@ -32,8 +31,6 @@ export default async function BookingsPage({
 }) {
   await requireAdminRole(["admin", "moderator"]);
   const { t } = await getT();
-
-  await markStaleConfirmedCompleted();
 
   const sp = await searchParams;
   const tab: TabKey = (TABS.find((t) => t.key === sp.status)?.key ?? "pending") as TabKey;

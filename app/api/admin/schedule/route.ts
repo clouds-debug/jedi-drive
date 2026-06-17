@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 import { readSession } from "@/lib/auth/session";
 import { findUserById } from "@/lib/auth/users";
 import { getInstructorDay } from "@/lib/admin/schedule";
-import { markStaleConfirmedCompleted } from "@/lib/lessons";
 
 export const runtime = "nodejs";
 
@@ -20,8 +19,6 @@ export async function GET(req: NextRequest) {
   if (!Number.isFinite(dayOffset) || dayOffset < 0 || dayOffset > 90) {
     return NextResponse.json({ error: "Bad day" }, { status: 400 });
   }
-
-  await markStaleConfirmedCompleted();
 
   const rows = await getInstructorDay(me.instructor_ref, dayOffset);
   return NextResponse.json({

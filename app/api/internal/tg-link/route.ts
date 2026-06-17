@@ -1,21 +1,16 @@
 import { NextResponse } from "next/server";
 import { query } from "@/lib/db";
+import { checkInternalAuth } from "@/lib/internal-auth";
 
 export const dynamic = "force-dynamic";
 
-function authorized(req: Request): boolean {
-  const expected = process.env.INTERNAL_API_TOKEN;
-  if (!expected) return false;
-  const got = req.headers.get("authorization") ?? "";
-  return got === `Bearer ${expected}`;
-}
 
 // POST /api/internal/tg-link
 // Body: { token: "ABC123", chatId: 12345 }
 // Бот вызывает при /start <token>. Если токен валидный и chat_id не заблокирован —
 // привязывает users.telegram_chat_id, чистит токен.
 export async function POST(req: Request) {
-  if (!authorized(req)) {
+  if (!checkInternalAuth(req)) {
     return NextResponse.json({ ok: false, error: "unauthorized" }, { status: 401 });
   }
 

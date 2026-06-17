@@ -64,7 +64,7 @@ export async function readSession(): Promise<{
   if (!token) return null;
 
   try {
-    const { payload } = await jwtVerify(token, getSecret());
+    const { payload } = await jwtVerify(token, getSecret(), { algorithms: ["HS256"] });
     const claims = payload as Claims;
     if (!claims.uid || !claims.sid) return null;
 

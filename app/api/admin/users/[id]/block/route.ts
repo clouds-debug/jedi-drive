@@ -24,6 +24,14 @@ export async function POST(
     return NextResponse.json({ error: "Сам себя нельзя" }, { status: 400 });
   }
 
+  // Модератор не может блокировать админа/другого модератора — только админ.
+  if (me.role !== "admin") {
+    const target = await findUserById(id);
+    if (target && (target.role === "admin" || target.role === "moderator")) {
+      return NextResponse.json({ error: "Недостаточно прав для этой роли" }, { status: 403 });
+    }
+  }
+
   let body: { action?: "block" | "unblock"; reason?: string };
   try {
     body = await req.json();

@@ -15,10 +15,28 @@ export function validateLogin(login: unknown): FieldError | null {
   return null;
 }
 
+// Топ самых частых паролей — отказываем сразу. Список короткий специально:
+// больше — задача внешнего breached-password lookup, тут только заметные кейсы.
+const COMMON_PASSWORDS = new Set([
+  "12345678", "123456789", "1234567890",
+  "qwerty123", "qwerty1234", "qwertyuiop",
+  "password", "password1", "password123",
+  "11111111", "11111111111", "111111111", "00000000",
+  "iloveyou", "1qaz2wsx", "1q2w3e4r5t",
+  "admin123", "admin1234", "letmein123",
+]);
+
 export function validatePassword(password: unknown): FieldError | null {
   if (typeof password !== "string") return { field: "password", message: "Пароль обязателен" };
-  if (password.length < 8) return { field: "password", message: "Минимум 8 символов" };
+  if (password.length < 10) return { field: "password", message: "Минимум 10 символов" };
   if (password.length > 200) return { field: "password", message: "Слишком длинный пароль" };
+  // Простая проверка: есть и буква, и цифра
+  if (!/[A-Za-zА-Яа-я]/.test(password) || !/[0-9]/.test(password)) {
+    return { field: "password", message: "Должны быть и буквы, и цифры" };
+  }
+  if (COMMON_PASSWORDS.has(password.toLowerCase())) {
+    return { field: "password", message: "Этот пароль слишком частый. Придумай другой." };
+  }
   return null;
 }
 

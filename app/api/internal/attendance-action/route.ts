@@ -2,16 +2,11 @@ import { NextResponse } from "next/server";
 import { query } from "@/lib/db";
 import { setLessonStatus, findAdminLessonById } from "@/lib/admin/bookings";
 import { createNotification } from "@/lib/notifications";
+import { checkInternalAuth } from "@/lib/internal-auth";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-function authorized(req: Request): boolean {
-  const expected = process.env.INTERNAL_API_TOKEN;
-  if (!expected) return false;
-  const got = req.headers.get("authorization") ?? "";
-  return got === `Bearer ${expected}`;
-}
 
 function ruDate(iso: string) {
   return new Date(iso).toLocaleString("ru-RU", {
@@ -27,7 +22,7 @@ function ruDate(iso: string) {
 // Body: { lessonId, action: 'handled' | 'cancel' }
 // Вызывается из bot-admin при тапе кнопки на карточке ответа ученика.
 export async function POST(req: Request) {
-  if (!authorized(req)) {
+  if (!checkInternalAuth(req)) {
     return NextResponse.json({ ok: false, error: "unauthorized" }, { status: 401 });
   }
   let body: { lessonId?: string; action?: string };

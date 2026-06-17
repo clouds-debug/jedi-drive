@@ -68,9 +68,10 @@ export async function POST(req: NextRequest) {
 
   const existing = await findUserByLogin(login);
   if (existing) {
+    // Не подтверждаем enumeration — сообщение неопределённое.
     return NextResponse.json(
-      { errors: [{ field: "login", message: "Такой логин уже занят" }] },
-      { status: 409 },
+      { errors: [{ field: "login", message: "Этот логин не подходит. Выбери другой." }] },
+      { status: 400 },
     );
   }
 

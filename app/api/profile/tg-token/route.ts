@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { readSession } from "@/lib/auth/session";
 import { findUserById } from "@/lib/auth/users";
 import { query } from "@/lib/db";
+import { rateLimit, tooManyResponse } from "@/lib/rate-limit";
 import { randomBytes } from "node:crypto";
 
 export const runtime = "nodejs";
@@ -20,6 +21,16 @@ export async function POST() {
   const me = await findUserById(session.userId);
   if (!me) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   if (me.is_blocked) return NextResponse.json({ error: "Blocked" }, { status: 403 });
+
+  // максимум 5 генераций в час на юзера — защита от спама токенов
+  const rate = rateLimit({
+    key: `tg-token:${me.id}`,
+    max: 5,
+    windowMs: 60 * 60 * 1000,
+  });
+  if (!rate.ok) {
+    return tooManyResponse(rate, "Слишком часто. Попробуй через час.");
+  }
 
   const token = makeToken();
   await query(

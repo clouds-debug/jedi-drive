@@ -4,16 +4,11 @@ import {
   setLessonStatus,
 } from "@/lib/admin/bookings";
 import { createNotification } from "@/lib/notifications";
+import { checkInternalAuth } from "@/lib/internal-auth";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-function authorized(req: Request): boolean {
-  const expected = process.env.INTERNAL_API_TOKEN;
-  if (!expected) return false;
-  const got = req.headers.get("authorization") ?? "";
-  return got === `Bearer ${expected}`;
-}
 
 function ruDate(iso: string) {
   return new Date(iso).toLocaleString("ru-RU", {
@@ -29,7 +24,7 @@ function ruDate(iso: string) {
 // Body: { lessonId: "123", action: "confirm" | "reject", modName?: string }
 // Бот-админ вызывает при клике на inline-кнопку модератором.
 export async function POST(req: Request) {
-  if (!authorized(req)) {
+  if (!checkInternalAuth(req)) {
     return NextResponse.json({ ok: false, error: "unauthorized" }, { status: 401 });
   }
 

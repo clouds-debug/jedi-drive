@@ -95,6 +95,10 @@ const STRINGS: Dict = {
   "att.cb.cancelled": { ru: "Занятие отменено", ge: "გაკვეთილი გაუქმდა" },
 };
 
+function escTg(s: string): string {
+  return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+
 export function botT(
   lang: BotLang,
   key: string,
@@ -104,9 +108,13 @@ export function botT(
   if (!entry) return key;
   const raw = entry[lang] ?? entry.ru;
   if (!params) return raw;
+  // Все подставляемые значения экранируются под HTML — шаблоны заранее
+  // допускают только безопасные теги (<b>, <code>, <a>), пользовательские
+  // данные не должны их вносить.
   return raw.replace(/\{\{(\w+)\}\}/g, (_, name) => {
     const v = params[name];
-    return v === undefined ? `{{${name}}}` : String(v);
+    if (v === undefined) return `{{${name}}}`;
+    return escTg(String(v));
   });
 }
 

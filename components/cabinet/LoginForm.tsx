@@ -5,6 +5,7 @@ import { useState } from "react";
 import { Field } from "./Field";
 import { SubmitButton } from "./SubmitButton";
 import { homePathForRole, type UserRole } from "@/lib/auth/roles";
+import { safeInternalPath } from "@/lib/safe-redirect";
 import { useT } from "@/lib/i18n/client";
 
 type Errors = Record<string, string>;
@@ -13,7 +14,7 @@ export function LoginForm() {
   const { t } = useT();
   const router = useRouter();
   const search = useSearchParams();
-  const explicitNext = search.get("next");
+  const explicitNext = safeInternalPath(search.get("next"));
 
   const [login, setLogin] = useState("");
   const [password, setPassword] = useState("");

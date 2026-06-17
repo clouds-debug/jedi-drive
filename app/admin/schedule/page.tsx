@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { requireAdminRole } from "@/lib/auth/require";
-import { markStaleConfirmedCompleted } from "@/lib/lessons";
 import { getInstructorDay } from "@/lib/admin/schedule";
 import { InstructorScheduleGrid } from "@/components/admin/InstructorScheduleGrid";
 import { getT } from "@/lib/i18n/server";
@@ -26,8 +25,6 @@ export default async function SchedulePage() {
       </div>
     );
   }
-
-  await markStaleConfirmedCompleted();
 
   const initialDay = 0;
   const rows = await getInstructorDay(user.instructor_ref, initialDay);

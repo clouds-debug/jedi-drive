@@ -4,7 +4,6 @@ import { UpcomingList } from "@/components/cabinet/UpcomingList";
 import {
   countUpcoming,
   listUpcoming,
-  markStaleConfirmedCompleted,
 } from "@/lib/lessons";
 import { readSession } from "@/lib/auth/session";
 import { getT } from "@/lib/i18n/server";
@@ -17,8 +16,6 @@ const PAGE_SIZE = 20;
 export default async function LessonsPage() {
   const session = await readSession();
   if (!session) redirect("/cabinet/login");
-
-  await markStaleConfirmedCompleted();
 
   const [upcoming, total, { t }] = await Promise.all([
     listUpcoming(session.userId, PAGE_SIZE),

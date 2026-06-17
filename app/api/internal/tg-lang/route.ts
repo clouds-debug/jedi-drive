@@ -1,20 +1,15 @@
 import { NextResponse } from "next/server";
 import { query } from "@/lib/db";
 import { isBotLang } from "@/lib/bot-i18n";
+import { checkInternalAuth } from "@/lib/internal-auth";
 
 export const dynamic = "force-dynamic";
 
-function authorized(req: Request): boolean {
-  const expected = process.env.INTERNAL_API_TOKEN;
-  if (!expected) return false;
-  const got = req.headers.get("authorization") ?? "";
-  return got === `Bearer ${expected}`;
-}
 
 // GET /api/internal/tg-lang?kind=user|mod&chatId=12345
 // Возвращает { lang: 'ru'|'ge' } для конкретного чата.
 export async function GET(req: Request) {
-  if (!authorized(req)) {
+  if (!checkInternalAuth(req)) {
     return NextResponse.json({ ok: false, error: "unauthorized" }, { status: 401 });
   }
   const url = new URL(req.url);
@@ -40,7 +35,7 @@ export async function GET(req: Request) {
 // POST /api/internal/tg-lang
 // Body: { kind: 'user'|'mod', chatId, lang }
 export async function POST(req: Request) {
-  if (!authorized(req)) {
+  if (!checkInternalAuth(req)) {
     return NextResponse.json({ ok: false, error: "unauthorized" }, { status: 401 });
   }
   let body: { kind?: string; chatId?: number; lang?: string };

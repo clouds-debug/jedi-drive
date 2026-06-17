@@ -1,20 +1,15 @@
 import { NextResponse } from "next/server";
 import { query } from "@/lib/db";
+import { checkInternalAuth } from "@/lib/internal-auth";
 
 export const dynamic = "force-dynamic";
 
-function authorized(req: Request): boolean {
-  const expected = process.env.INTERNAL_API_TOKEN;
-  if (!expected) return false;
-  const got = req.headers.get("authorization") ?? "";
-  return got === `Bearer ${expected}`;
-}
 
 // POST /api/internal/tg-status
 // Body: { chatId: 12345 }
 // Бот вызывает при простом /start (без токена) чтобы понять — это новый юзер или уже привязанный.
 export async function POST(req: Request) {
-  if (!authorized(req)) {
+  if (!checkInternalAuth(req)) {
     return NextResponse.json({ ok: false, error: "unauthorized" }, { status: 401 });
   }
   let body: { chatId?: number };
@@ -27,8 +22,8 @@ export async function POST(req: Request) {
   if (!Number.isFinite(chatId)) {
     return NextResponse.json({ ok: false, error: "bad chatId" }, { status: 400 });
   }
-  const rows = await query<{ first_name: string | null; login: string }>(
-    `SELECT first_name, login FROM users WHERE telegram_chat_id = $1 LIMIT 1`,
+  const rows = await query<{ first_name: string | null }>(
+    `SELECT first_name FROM users WHERE telegram_chat_id = $1 LIMIT 1`,
     [chatId],
   );
   if (rows.length === 0) {
@@ -38,6 +33,5 @@ export async function POST(req: Request) {
     ok: true,
     linked: true,
     firstName: rows[0].first_name,
-    login: rows[0].login,
   });
 }

@@ -4,6 +4,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { Field } from "./Field";
 import { SubmitButton } from "./SubmitButton";
+import { safeInternalPath } from "@/lib/safe-redirect";
 import { useT } from "@/lib/i18n/client";
 
 type Errors = Record<string, string>;
@@ -12,7 +13,7 @@ export function RegisterForm() {
   const { t } = useT();
   const router = useRouter();
   const search = useSearchParams();
-  const next = search.get("next") ?? "/cabinet/profile";
+  const next = safeInternalPath(search.get("next")) ?? "/cabinet/profile";
 
   const [login, setLogin] = useState("");
   const [password, setPassword] = useState("");
