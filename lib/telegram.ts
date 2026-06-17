@@ -52,7 +52,9 @@ export async function sendUserMessage(chatId: number, text: string): Promise<Sen
   });
 }
 
-export type ModInlineButton = { text: string; callback_data: string };
+export type ModInlineButton =
+  | { text: string; callback_data: string }
+  | { text: string; url: string };
 
 export async function sendModMessage(
   chatId: number,
@@ -146,10 +148,17 @@ export function formatBookingCardForMod(b: {
 }
 
 export function modCardButtons(lessonId: string): ModInlineButton[][] {
-  return [
+  const base = (process.env.PUBLIC_BASE_URL || "").replace(/\/$/, "");
+  const rows: ModInlineButton[][] = [
     [
       { text: "✅ Подтвердить", callback_data: `confirm:${lessonId}` },
       { text: "❌ Отклонить", callback_data: `reject:${lessonId}` },
     ],
   ];
+  if (base) {
+    rows.push([
+      { text: "🔄 В админку", url: `${base}/admin/bookings?status=pending#lesson-${lessonId}` },
+    ]);
+  }
+  return rows;
 }

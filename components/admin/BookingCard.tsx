@@ -98,7 +98,7 @@ export function BookingCard({
   const statusLabel = t(`admin.status.${lesson.status}`);
 
   return (
-    <div className="relative bg-white/[0.03] border border-white/10 border-l-[3px] border-l-orange rounded-[var(--radius-card)] p-5 sm:p-6 transition-colors hover:bg-white/[0.05]">
+    <div id={`lesson-${lesson.id}`} className="relative scroll-mt-20 bg-white/[0.03] border border-white/10 border-l-[3px] border-l-orange rounded-[var(--radius-card)] p-5 sm:p-6 transition-colors hover:bg-white/[0.05]">
       <div className="absolute -right-12 -top-12 w-44 h-44 bg-orange/[0.10] rounded-full blur-[60px] pointer-events-none" aria-hidden />
 
       <div className="relative">
