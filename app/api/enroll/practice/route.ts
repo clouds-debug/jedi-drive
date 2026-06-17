@@ -5,6 +5,7 @@ import { query } from "@/lib/db";
 import { countCompletedByKind, countPendingByKind } from "@/lib/lessons";
 import { getTrustThreshold } from "@/lib/admin/settings";
 import { createNotification } from "@/lib/notifications";
+import { dispatchModBookingCard } from "@/lib/telegram-dispatch";
 import { getClientIp, rateLimit, tooManyResponse } from "@/lib/rate-limit";
 import { isIpBlocked, touchUserIp } from "@/lib/admin/blocks";
 import { tbilisiSlotStringToUtcDate } from "@/lib/tz";
@@ -118,10 +119,11 @@ export async function POST(req: NextRequest) {
   const autoConfirm = completedCount >= trustThreshold;
   const status = autoConfirm ? "confirmed" : "pending";
 
-  await query(
+  const inserted = await query<{ id: string }>(
     `INSERT INTO lessons (user_id, kind, format, instructor_id, instructor_name,
                           scheduled_at, duration_min, location, status, notes)
-     VALUES ($1, 'practice', $2, $3, $4, $5, $6, $7, $8, $9)`,
+     VALUES ($1, 'practice', $2, $3, $4, $5, $6, $7, $8, $9)
+     RETURNING id::text`,
     [
       session.userId,
       body.format,
@@ -134,6 +136,22 @@ export async function POST(req: NextRequest) {
       notes,
     ],
   );
+  const lessonId = inserted[0]?.id;
+
+  // карточка модерам только для pending заявок (auto-confirm не требует решения)
+  if (!autoConfirm && lessonId) {
+    const fullName = [me.first_name, me.last_name].filter(Boolean).join(" ") || me.login;
+    void dispatchModBookingCard({
+      lessonId,
+      fullName,
+      login: me.login,
+      phone: me.phone,
+      scheduledAt: new Date(scheduledAt),
+      instructorName: body.instructorName,
+      format: body.format,
+      notes: notes || null,
+    }).catch((e) => console.error("[tg] mod card dispatch failed", e));
+  }
 
   const params = { instr: body.instructorName, day: body.dayLabel ?? "", time: body.time };
   await createNotification(

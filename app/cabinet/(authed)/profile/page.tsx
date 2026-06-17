@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { ProfileForm } from "@/components/cabinet/ProfileForm";
+import { TelegramLinkButton } from "@/components/cabinet/TelegramLinkButton";
 import { readSession } from "@/lib/auth/session";
 import { findUserById } from "@/lib/auth/users";
 import { getT } from "@/lib/i18n/server";
@@ -28,6 +29,16 @@ export default async function ProfilePage() {
           telegramUsername: user.telegram_username,
         }}
       />
+
+      <div className="mt-8 pt-6 border-t border-white/[0.06]">
+        <div className="text-[11px] text-muted-on-navy tracking-[0.1em] uppercase mb-2">
+          Уведомления в Telegram
+        </div>
+        <p className="text-[12.5px] text-muted-on-navy mb-3 leading-[1.55]">
+          Привяжи Telegram — будешь получать уведомления о заявках прямо в чат с ботом.
+        </p>
+        <TelegramLinkButton initialLinked={user.telegram_chat_id !== null} />
+      </div>
     </div>
   );
 }

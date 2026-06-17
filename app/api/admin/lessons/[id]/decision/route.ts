@@ -7,6 +7,7 @@ import {
   setLessonStatus,
 } from "@/lib/admin/bookings";
 import { createNotification } from "@/lib/notifications";
+import { dispatchModCardClose } from "@/lib/telegram-dispatch";
 
 export const runtime = "nodejs";
 
@@ -53,6 +54,8 @@ export async function POST(
     return NextResponse.json({ error: "Заявка уже закрыта" }, { status: 400 });
   }
 
+  const modName = `@${me.login}`;
+
   if (body.action === "confirm") {
     await setLessonStatus(lesson.id, "confirmed");
     if (lesson.user_id) {
@@ -63,6 +66,7 @@ export async function POST(
         "booking",
       );
     }
+    void dispatchModCardClose(lesson.id, "confirmed", modName).catch(() => {});
     return NextResponse.json({ ok: true });
   }
 
@@ -79,6 +83,7 @@ export async function POST(
         "warning",
       );
     }
+    void dispatchModCardClose(lesson.id, "cancelled", modName).catch(() => {});
     return NextResponse.json({ ok: true });
   }
 

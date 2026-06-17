@@ -17,6 +17,7 @@ export type UserRow = {
   last_name: string | null;
   phone: string | null;
   telegram_username: string | null;
+  telegram_chat_id: string | null;
   role: UserRole;
   instructor_ref: string | null;
   is_blocked: boolean;
@@ -25,7 +26,8 @@ export type UserRow = {
 };
 
 const SELECT_USER = `id::text, login, password_hash, dob_encrypted,
-  first_name, last_name, phone, telegram_username, role, instructor_ref,
+  first_name, last_name, phone, telegram_username, telegram_chat_id::text AS telegram_chat_id,
+  role, instructor_ref,
   is_blocked, last_ip::text AS last_ip, created_at`;
 
 export async function findUserByLogin(login: string): Promise<UserRow | null> {

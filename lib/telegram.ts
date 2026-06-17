@@ -1,0 +1,150 @@
+// Telegram bot integration — server-side helpers.
+// Используется и Next.js, и оба bot-процесса.
+
+const TG_API = "https://api.telegram.org";
+
+function userToken(): string | null {
+  return process.env.TELEGRAM_USER_BOT_TOKEN || null;
+}
+function adminToken(): string | null {
+  return process.env.TELEGRAM_ADMIN_BOT_TOKEN || null;
+}
+
+export function modChatIds(): number[] {
+  const raw = process.env.TELEGRAM_MOD_CHAT_IDS || "";
+  return raw
+    .split(",")
+    .map((s) => s.trim())
+    .filter(Boolean)
+    .map((s) => Number(s))
+    .filter((n) => Number.isFinite(n));
+}
+
+type SendResult = { ok: true; messageId: number } | { ok: false; error: string };
+
+async function callBot(
+  token: string,
+  method: string,
+  payload: Record<string, unknown>,
+): Promise<SendResult> {
+  try {
+    const res = await fetch(`${TG_API}/bot${token}/${method}`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    const data = (await res.json()) as { ok: boolean; result?: { message_id: number }; description?: string };
+    if (!data.ok) return { ok: false, error: data.description ?? "tg api error" };
+    return { ok: true, messageId: data.result?.message_id ?? 0 };
+  } catch (e) {
+    return { ok: false, error: e instanceof Error ? e.message : "fetch failed" };
+  }
+}
+
+export async function sendUserMessage(chatId: number, text: string): Promise<SendResult> {
+  const token = userToken();
+  if (!token) return { ok: false, error: "no user bot token" };
+  return callBot(token, "sendMessage", {
+    chat_id: chatId,
+    text,
+    parse_mode: "HTML",
+    disable_web_page_preview: true,
+  });
+}
+
+export type ModInlineButton = { text: string; callback_data: string };
+
+export async function sendModMessage(
+  chatId: number,
+  text: string,
+  buttons?: ModInlineButton[][],
+): Promise<SendResult> {
+  const token = adminToken();
+  if (!token) return { ok: false, error: "no admin bot token" };
+  return callBot(token, "sendMessage", {
+    chat_id: chatId,
+    text,
+    parse_mode: "HTML",
+    disable_web_page_preview: true,
+    reply_markup: buttons ? { inline_keyboard: buttons } : undefined,
+  });
+}
+
+export async function editModMessage(
+  chatId: number,
+  messageId: number,
+  text: string,
+): Promise<SendResult> {
+  const token = adminToken();
+  if (!token) return { ok: false, error: "no admin bot token" };
+  return callBot(token, "editMessageText", {
+    chat_id: chatId,
+    message_id: messageId,
+    text,
+    parse_mode: "HTML",
+    disable_web_page_preview: true,
+    reply_markup: { inline_keyboard: [] },
+  });
+}
+
+export async function answerCallback(
+  token: string,
+  callbackQueryId: string,
+  text?: string,
+): Promise<void> {
+  try {
+    await fetch(`${TG_API}/bot${token}/answerCallbackQuery`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ callback_query_id: callbackQueryId, text: text ?? "" }),
+    });
+  } catch {}
+}
+
+// HTML-escape для безопасной подстановки имён/телефонов в сообщения
+export function esc(s: string | null | undefined): string {
+  if (!s) return "";
+  return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+
+// Карточка заявки на практику для модераторов
+export function formatBookingCardForMod(b: {
+  fullName: string;
+  login: string | null;
+  phone: string | null;
+  scheduledAt: Date;
+  instructorName: string | null;
+  format: string | null;
+  notes: string | null;
+}): string {
+  const date = b.scheduledAt.toLocaleString("ru-RU", {
+    weekday: "short",
+    day: "2-digit",
+    month: "long",
+    hour: "2-digit",
+    minute: "2-digit",
+    timeZone: "Asia/Tbilisi",
+  });
+  const fmtRu = b.format === "pad" ? "Площадка"
+    : b.format === "city" ? "Город"
+      : b.format === "pad+city" ? "Площадка + город"
+        : (b.format ?? "—");
+  const lines = [
+    `🔔 <b>Новая заявка на практику</b>`,
+    ``,
+    `👤 ${esc(b.fullName)}` + (b.login ? ` (@${esc(b.login)})` : "") + (b.phone ? `, ${esc(b.phone)}` : ""),
+    `📅 ${esc(date)}`,
+    `🚗 ${esc(b.instructorName ?? "—")} · ${esc(fmtRu)}`,
+  ];
+  if (b.notes) lines.push(`💬 ${esc(b.notes)}`);
+  return lines.join("\n");
+}
+
+export function modCardButtons(lessonId: string): ModInlineButton[][] {
+  return [
+    [
+      { text: "✅ Подтвердить", callback_data: `confirm:${lessonId}` },
+      { text: "❌ Отклонить", callback_data: `reject:${lessonId}` },
+    ],
+  ];
+}

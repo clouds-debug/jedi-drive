@@ -1,4 +1,5 @@
 import { query } from "@/lib/db";
+import { sendUserMessage } from "@/lib/telegram";
 
 export type NotificationRow = {
   id: string;
@@ -69,4 +70,27 @@ export async function createNotification(
     `INSERT INTO notifications (user_id, title, body, kind) VALUES ($1, $2, $3, $4)`,
     [userId, title, body, kind],
   );
+
+  // fire-and-forget: дублируем в TG если юзер привязан.
+  // Не ждём — медленный TG не должен тормозить ответ API.
+  void sendToTelegramIfLinked(userId, title, body).catch(() => {});
+}
+
+async function sendToTelegramIfLinked(
+  userId: string,
+  title: string,
+  body: string | null,
+): Promise<void> {
+  const rows = await query<{ chat_id: string | null }>(
+    `SELECT telegram_chat_id::text AS chat_id FROM users WHERE id = $1::bigint LIMIT 1`,
+    [userId],
+  );
+  const chatId = rows[0]?.chat_id;
+  if (!chatId) return;
+  const text = body ? `<b>${escapeHtml(title)}</b>\n\n${escapeHtml(body)}` : `<b>${escapeHtml(title)}</b>`;
+  await sendUserMessage(Number(chatId), text);
+}
+
+function escapeHtml(s: string): string {
+  return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }
