@@ -4,6 +4,7 @@ import type { AdminLessonRow } from "@/lib/admin/bookings";
 import { DecisionActions } from "./DecisionActions";
 import { ConfirmedActions } from "./ConfirmedActions";
 import { BlockUserButton } from "./BlockUserButton";
+import { TheoryHandledButton } from "./TheoryHandledButton";
 import { useT, useLocale } from "@/lib/i18n/client";
 
 function fmtWhen(iso: string, locale: string) {
@@ -154,6 +155,14 @@ export function BookingCard({
                 {statusLabel}
               </span>
             )}
+            {isTheory && lesson.status === "completed" && (
+              <span className="inline-flex items-center gap-1 text-[10.5px] font-mono uppercase tracking-[0.1em] border border-emerald-500/40 bg-emerald-500/[0.08] text-emerald-300 rounded px-2 py-0.5">
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                  <path d="M5 12l4 4L19 7" />
+                </svg>
+                Обработана
+              </span>
+            )}
           </div>
         </div>
 
@@ -220,9 +229,21 @@ export function BookingCard({
           );
         })()}
 
-        {showActions && lesson.status === "pending" && (
+        {showActions && lesson.status === "pending" && !isTheory && (
           <div className="mt-4 pt-3 border-t border-white/[0.05] flex items-center justify-between gap-3 flex-wrap">
             <DecisionActions lessonId={lesson.id} />
+            {!isGuest && lesson.user_id && lesson.user_login && (
+              <BlockUserButton
+                userId={lesson.user_id}
+                userLogin={lesson.user_login}
+                isBlocked={lesson.user_is_blocked}
+              />
+            )}
+          </div>
+        )}
+        {showActions && lesson.status === "pending" && isTheory && (
+          <div className="mt-4 pt-3 border-t border-white/[0.05] flex items-center justify-between gap-3 flex-wrap">
+            <TheoryHandledButton lessonId={lesson.id} />
             {!isGuest && lesson.user_id && lesson.user_login && (
               <BlockUserButton
                 userId={lesson.user_id}

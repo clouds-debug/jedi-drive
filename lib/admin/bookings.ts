@@ -68,13 +68,17 @@ export async function listAdminBookings({
   params.push(limit);
   params.push(offset);
   const whereSql = where.length ? `WHERE ${where.join(" AND ")}` : "";
+  // Для теории scheduled_at не несёт смысла (у заявок нет конкретной даты занятия),
+  // сортируем по дате подачи. Для практики оставляем по scheduled_at.
+  const orderSql =
+    kind === "theory"
+      ? "ORDER BY l.created_at DESC"
+      : "ORDER BY CASE WHEN l.status = 'pending' THEN 0 ELSE 1 END, l.scheduled_at ASC";
   return query<AdminLessonRow>(
     `SELECT ${SELECT}
      FROM lessons l LEFT JOIN users u ON u.id = l.user_id
      ${whereSql}
-     ORDER BY
-       CASE WHEN l.status = 'pending' THEN 0 ELSE 1 END,
-       l.scheduled_at ASC
+     ${orderSql}
      LIMIT $${params.length - 1} OFFSET $${params.length}`,
     params,
   );

@@ -118,8 +118,9 @@ export default async function BookingsPage({
               key={lesson.id}
               lesson={lesson}
               showActions={
-                activeTab.kind === "practice" &&
-                (status === "pending" || status === "confirmed")
+                (activeTab.kind === "practice" &&
+                  (status === "pending" || status === "confirmed")) ||
+                activeTab.kind === "theory"
               }
             />
           ))}
