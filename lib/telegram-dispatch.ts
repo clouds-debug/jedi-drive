@@ -2,6 +2,7 @@
 // Знают про БД (tg_mod_messages), используются из API-роутов.
 
 import { query } from "@/lib/db";
+import { getTgModeratorChatIds } from "@/lib/admin/moderators";
 import {
   editModMessage,
   formatBookingCardForMod,
@@ -9,6 +10,17 @@ import {
   modChatIds,
   sendModMessage,
 } from "@/lib/telegram";
+
+async function effectiveModChats(): Promise<number[]> {
+  const fromEnv = modChatIds();
+  let fromDb: number[] = [];
+  try {
+    fromDb = await getTgModeratorChatIds();
+  } catch (e) {
+    console.error("[tg-dispatch] failed to load moderators from DB", e);
+  }
+  return Array.from(new Set([...fromEnv, ...fromDb]));
+}
 
 type ModCardData = {
   lessonId: string;
@@ -23,7 +35,7 @@ type ModCardData = {
 };
 
 export async function dispatchModBookingCard(d: ModCardData): Promise<void> {
-  const chats = modChatIds();
+  const chats = await effectiveModChats();
   if (chats.length === 0) return;
   const text = formatBookingCardForMod(d);
   const buttons = modCardButtons(d.lessonId);

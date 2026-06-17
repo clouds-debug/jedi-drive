@@ -50,6 +50,23 @@ async function sendMessage(chatId: number, text: string) {
   });
 }
 
+async function callStatus(chatId: number): Promise<{ linked: boolean; firstName?: string | null }> {
+  try {
+    const r = await fetch(`${BASE}/api/internal/tg-status`, {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        authorization: `Bearer ${INTERNAL}`,
+      },
+      body: JSON.stringify({ chatId }),
+    });
+    return (await r.json()) as { linked: boolean; firstName?: string | null };
+  } catch (e) {
+    console.error("callStatus failed", e);
+    return { linked: false };
+  }
+}
+
 async function callLink(token: string, chatId: number, username: string | null) {
   try {
     const r = await fetch(`${BASE}/api/internal/tg-link`, {
@@ -79,10 +96,19 @@ async function handleUpdate(u: Update) {
   const text = msg.text.trim();
 
   if (text === "/start") {
-    await sendMessage(
-      chatId,
-      "Привет! Я бот <b>Jedi Drive</b>. Чтобы привязать меня к своему аккаунту, открой кабинет на сайте и нажми «Привязать Telegram».",
-    );
+    const status = await callStatus(chatId);
+    if (status.linked) {
+      const hi = status.firstName ? `, ${status.firstName}` : "";
+      await sendMessage(
+        chatId,
+        `Привет${hi}! 👋\n\nЭтот бот отправляет уведомления о твоих заявках в <b>Jedi Drive</b> — подтверждения, отказы, переносы.\n\nВсё остальное — в личном кабинете на сайте.`,
+      );
+    } else {
+      await sendMessage(
+        chatId,
+        "Привет! Я бот <b>Jedi Drive</b>. Чтобы привязать меня к своему аккаунту, открой кабинет на сайте и нажми «Привязать Telegram».",
+      );
+    }
     return;
   }
   const m = text.match(/^\/start\s+(\S+)$/);
