@@ -20,7 +20,6 @@ function ruDate(iso: string) {
 
 // POST /api/internal/attendance-action
 // Body: { lessonId, action: 'handled' | 'cancel' }
-// Вызывается из bot-admin при тапе кнопки на карточке ответа ученика.
 export async function POST(req: Request) {
   if (!checkInternalAuth(req)) {
     return NextResponse.json({ ok: false, error: "unauthorized" }, { status: 401 });

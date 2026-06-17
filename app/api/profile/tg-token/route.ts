@@ -9,12 +9,9 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 function makeToken(): string {
-  // 6 байт → base32-like короткая строка
   return randomBytes(5).toString("base64url").slice(0, 8).toUpperCase();
 }
 
-// POST /api/profile/tg-token — генерим короткий токен для привязки TG.
-// Возвращаем токен + username бота, чтобы фронт открыл deep-link.
 export async function POST() {
   const session = await readSession();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -22,7 +19,6 @@ export async function POST() {
   if (!me) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   if (me.is_blocked) return NextResponse.json({ error: "Blocked" }, { status: 403 });
 
-  // максимум 5 генераций в час на юзера — защита от спама токенов
   const rate = rateLimit({
     key: `tg-token:${me.id}`,
     max: 5,
@@ -47,7 +43,6 @@ export async function POST() {
   });
 }
 
-// GET /api/profile/tg-token — статус привязки (для poll после открытия TG).
 export async function GET() {
   const session = await readSession();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -56,7 +51,6 @@ export async function GET() {
   return NextResponse.json({ linked: me.telegram_chat_id !== null });
 }
 
-// DELETE /api/profile/tg-token — отвязать (с подтверждением во фронте).
 export async function DELETE() {
   const session = await readSession();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

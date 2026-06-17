@@ -34,7 +34,6 @@ export async function POST(
   const lesson = await findAdminLessonById(id);
   if (!lesson) return NextResponse.json({ error: "Не найдено" }, { status: 404 });
 
-  // Право принимать решение: модератор/админ — любые; инструктор — только свои.
   const isInstructorOwn =
     me.role === "instructor" &&
     me.instructor_ref !== null &&

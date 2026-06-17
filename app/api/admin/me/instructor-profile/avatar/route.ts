@@ -9,7 +9,7 @@ import {
 
 export const runtime = "nodejs";
 
-const MAX_BYTES = 4 * 1024 * 1024; // 4 MB на вход — после пересжатия будет сильно меньше
+const MAX_BYTES = 4 * 1024 * 1024;
 const MAX_DIM = 1024;
 const ALLOWED_MIME = new Set(["image/jpeg", "image/png", "image/webp"]);
 const ALLOWED_SHARP_FORMAT = new Set(["jpeg", "png", "webp"]);
@@ -40,16 +40,12 @@ export async function POST(req: NextRequest) {
       { status: 400 },
     );
   }
-  // Заявленный MIME (Content-Type) — не доверяем, но если уж выставлен,
-  // отсекаем явно неподходящие до тяжёлого декодирования через sharp.
   if (file.type && !ALLOWED_MIME.has(file.type)) {
     return NextResponse.json({ error: "Только JPG, PNG или WebP" }, { status: 400 });
   }
 
   const buf = Buffer.from(await file.arrayBuffer());
 
-  // Декодируем через sharp — проверяем magic-bytes по реальному формату,
-  // а не Content-Type заголовку. Если sharp не распознал — это не картинка.
   let meta: sharp.Metadata;
   try {
     meta = await sharp(buf).metadata();
@@ -59,13 +55,10 @@ export async function POST(req: NextRequest) {
   if (!meta.format || !ALLOWED_SHARP_FORMAT.has(meta.format)) {
     return NextResponse.json({ error: "Только JPG, PNG или WebP" }, { status: 400 });
   }
-  // защита от decompression bombs
   if ((meta.width ?? 0) > 8000 || (meta.height ?? 0) > 8000) {
     return NextResponse.json({ error: "Слишком большое разрешение" }, { status: 400 });
   }
 
-  // Пересжимаем — это стрипит EXIF, нормализует ориентацию, ограничивает размер
-  // и гарантирует что вернётся валидная картинка (не байты-с-полезной-нагрузкой).
   const safeBuf = await sharp(buf)
     .rotate()
     .resize(MAX_DIM, MAX_DIM, { fit: "inside", withoutEnlargement: true })

@@ -7,7 +7,6 @@ export const dynamic = "force-dynamic";
 
 
 // GET /api/internal/tg-lang?kind=user|mod&chatId=12345
-// Возвращает { lang: 'ru'|'ge' } для конкретного чата.
 export async function GET(req: Request) {
   if (!checkInternalAuth(req)) {
     return NextResponse.json({ ok: false, error: "unauthorized" }, { status: 401 });

@@ -24,7 +24,7 @@ export type AdminReviewRow = ReviewRow & {
 const SELECT_BASE = `id::text, user_id::text, instructor_id, rating, body, status,
   reject_reason, created_at, decided_at, decided_by::text`;
 
-/** Проверяет, что у юзера есть хотя бы одно проведённое занятие с инструктором. */
+
 export async function hasCompletedLessonWith(
   userId: string,
   instructorId: string,
@@ -37,7 +37,7 @@ export async function hasCompletedLessonWith(
   return Number(rows[0].c) > 0;
 }
 
-/** Активный (pending или approved) отзыв пары. */
+
 export async function findActiveReview(
   userId: string,
   instructorId: string,
@@ -131,11 +131,11 @@ export async function decideReview(
 }
 
 export type InstructorAggregate = {
-  rating: number; // 0 если нет отзывов
+  rating: number;
   count: number;
 };
 
-/** Возвращает средний рейтинг и счётчик одобренных отзывов на инструктора. */
+
 export async function getInstructorAggregates(): Promise<
   Map<string, InstructorAggregate>
 > {
@@ -160,7 +160,7 @@ export async function getInstructorAggregates(): Promise<
   return out;
 }
 
-/** Возвращает одобренные отзывы конкретного инструктора, новые сначала. */
+
 export async function listApprovedReviewsFor(
   instructorId: string,
   limit = 30,
@@ -191,7 +191,7 @@ export async function listApprovedReviewsFor(
   );
 }
 
-/** Возвращает set instructor_id, на которые у юзера уже есть активный отзыв. */
+
 export async function listActiveReviewedInstructors(
   userId: string,
 ): Promise<Set<string>> {

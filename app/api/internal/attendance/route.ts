@@ -9,7 +9,6 @@ export const dynamic = "force-dynamic";
 
 // POST /api/internal/attendance
 // Body: { lessonId, response: 'coming'|'not_coming', chatId }
-// chatId — для верификации (что это именно владелец занятия)
 export async function POST(req: Request) {
   if (!checkInternalAuth(req)) {
     return NextResponse.json({ ok: false, error: "unauthorized" }, { status: 401 });
@@ -27,7 +26,6 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok: false, error: "bad params" }, { status: 400 });
   }
 
-  // Найдём занятие и убедимся что владелец = этот chat_id
   const rows = await query<{
     id: string;
     scheduled_at: string;
@@ -63,7 +61,6 @@ export async function POST(req: Request) {
     );
   }
   if (lesson.current_response) {
-    // уже отвечал — не пересоздаём карточку модерам, просто подтверждаем
     return NextResponse.json({ ok: true, alreadyResponded: true });
   }
 

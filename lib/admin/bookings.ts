@@ -76,8 +76,6 @@ export async function listAdminBookings({
   params.push(limit);
   params.push(offset);
   const whereSql = where.length ? `WHERE ${where.join(" AND ")}` : "";
-  // Для теории scheduled_at не несёт смысла (у заявок нет конкретной даты занятия),
-  // сортируем по дате подачи. Для практики оставляем по scheduled_at.
   const orderSql =
     kind === "theory"
       ? "ORDER BY l.created_at DESC"

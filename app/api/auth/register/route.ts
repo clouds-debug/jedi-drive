@@ -23,8 +23,6 @@ export async function POST(req: NextRequest) {
     login?: string;
     password?: string;
     dob?: string;
-    // Honeypot — настоящие пользователи не видят это поле.
-    // Если оно заполнено — почти 100% бот.
     company?: string;
   };
   try {
@@ -33,7 +31,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Bad JSON" }, { status: 400 });
   }
 
-  // Honeypot trip — отвечаем 200 чтобы бот думал что всё прошло, но юзера не создаём.
   if (typeof body.company === "string" && body.company.trim().length > 0) {
     return NextResponse.json({ ok: true });
   }
@@ -48,7 +45,6 @@ export async function POST(req: NextRequest) {
   const ip = getClientIp(req);
 
   if (await isIpBlocked(ip)) {
-    // Тихо отвечаем «ok», чтобы бот не понял что отрезан.
     return NextResponse.json({ ok: true });
   }
 
@@ -68,7 +64,6 @@ export async function POST(req: NextRequest) {
 
   const existing = await findUserByLogin(login);
   if (existing) {
-    // Не подтверждаем enumeration — сообщение неопределённое.
     return NextResponse.json(
       { errors: [{ field: "login", message: "Этот логин не подходит. Выбери другой." }] },
       { status: 400 },

@@ -47,7 +47,6 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  // Право на отзыв: должно быть проведённое занятие с этим инструктором.
   const eligible = await hasCompletedLessonWith(me.id, instructorId);
   if (!eligible) {
     return NextResponse.json(
@@ -56,7 +55,6 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  // Нельзя оставить второй активный отзыв.
   const existing = await findActiveReview(me.id, instructorId);
   if (existing) {
     return NextResponse.json(

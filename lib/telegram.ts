@@ -1,5 +1,4 @@
 // Telegram bot integration — server-side helpers.
-// Используется и Next.js, и оба bot-процесса.
 
 import { botT, type BotLang } from "@/lib/bot-i18n";
 
@@ -117,13 +116,11 @@ export async function answerCallback(
   } catch {}
 }
 
-// HTML-escape для безопасной подстановки имён/телефонов в сообщения
 export function esc(s: string | null | undefined): string {
   if (!s) return "";
   return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }
 
-// Карточка заявки на практику для модераторов
 export function formatBookingCardForMod(b: {
   fullName: string;
   login: string | null;
@@ -178,7 +175,6 @@ export function modCardButtons(lessonId: string, lang: BotLang = "ru"): ModInlin
   return rows;
 }
 
-// Карточка ответа ученика на напоминание (для модераторов)
 export function formatAttendanceCardForMod(
   d: {
     fullName: string;

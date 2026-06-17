@@ -4,11 +4,6 @@ import { useEffect, useRef } from "react";
 
 const ROUTE_D = "M 30 195 C 130 200, 170 100, 290 110 S 410 200, 540 115";
 
-/**
- * Hero illustration — навигационная карта. Машина едет по маршруту, колёса
- * касаются верха оранжевой линии. Анимация на requestAnimationFrame —
- * SMIL/CSS offset-path в этом setup'е работает капризно, rAF гарантированно.
- */
 export function HeroIllustration() {
   const pathRef = useRef<SVGPathElement | null>(null);
   const carRef = useRef<SVGGElement | null>(null);
@@ -70,7 +65,7 @@ export function HeroIllustration() {
           </radialGradient>
         </defs>
 
-        {/* фоновая сетка */}
+        {}
         <g opacity="0.08">
           {Array.from({ length: 7 }).map((_, i) => (
             <line key={`v${i}`} x1={i * 100 + 20} y1="0" x2={i * 100 + 20} y2="240" stroke="#FDBA74" strokeWidth="0.6" />
@@ -80,14 +75,14 @@ export function HeroIllustration() {
           ))}
         </g>
 
-        {/* «улицы» */}
+        {}
         <g opacity="0.22" stroke="#3F4A78" strokeWidth="3">
           <path d="M 100 0 L 100 240" />
           <path d="M 0 70 L 640 70" strokeDasharray="2 8" />
           <path d="M 380 0 L 380 240" />
         </g>
 
-        {/* свечение позади маршрута */}
+        {}
         <path
           d={ROUTE_D}
           fill="none"
@@ -98,10 +93,10 @@ export function HeroIllustration() {
           filter="blur(4px)"
         />
 
-        {/* сам маршрут */}
+        {}
         <path ref={pathRef} d={ROUTE_D} fill="none" stroke="url(#routeFade)" strokeWidth="4" strokeLinecap="round" />
 
-        {/* пунктир движущейся разметки поверх */}
+        {}
         <path
           d={ROUTE_D}
           fill="none"
@@ -114,13 +109,13 @@ export function HeroIllustration() {
           <animate attributeName="stroke-dashoffset" from="0" to="-28" dur="2.2s" repeatCount="indefinite" />
         </path>
 
-        {/* старт */}
+        {}
         <g>
           <circle cx="30" cy="195" r="10" fill="url(#startDot)" />
           <circle cx="30" cy="195" r="4" fill="#0F1430" />
         </g>
 
-        {/* финиш — пин с B */}
+        {}
         <g transform="translate(520 60)">
           <ellipse cx="35" cy="92" rx="50" ry="10" fill="url(#pinGlow)" />
           <path
@@ -143,7 +138,7 @@ export function HeroIllustration() {
           </text>
         </g>
 
-        {/* tbilisi подпись */}
+        {}
         <text
           x="320"
           y="40"
@@ -158,7 +153,7 @@ export function HeroIllustration() {
           TBILISI
         </text>
 
-        {/* искры */}
+        {}
         <g fill="#FDBA74">
           <circle cx="180" cy="40" r="1.6" opacity="0.7" />
           <circle cx="240" cy="180" r="1.4" opacity="0.5" />
@@ -166,8 +161,8 @@ export function HeroIllustration() {
           <circle cx="600" cy="200" r="1.4" opacity="0.5" />
         </g>
 
-        {/* машина: outer g двигается rAF-ом, inner g смещает машину вверх,
-            чтобы колёса касались верха линии после поворота. */}
+        {
+}
         <g ref={carRef} transform="translate(30 195)">
           <g transform="translate(-12 -18)">
             <ellipse cx="12" cy="17" rx="13" ry="2" fill="#000000" opacity="0.35" />

@@ -31,7 +31,6 @@ export function TelegramLinkButton({ initialLinked }: Props) {
       }
       setToken(data.token);
       window.open(data.deepLink, "_blank", "noopener");
-      // poll статус каждые 2 сек, максимум 5 минут
       const started = Date.now();
       pollRef.current = window.setInterval(async () => {
         if (Date.now() - started > 5 * 60 * 1000) {

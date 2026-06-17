@@ -3,8 +3,8 @@
 import { useEffect, useRef, useState } from "react";
 import { useT } from "@/lib/i18n/client";
 
-const BOX = 320; // диаметр круга в px на экране
-const OUT = 512; // финальный размер аватара в px
+const BOX = 320;
+const OUT = 512;
 
 type Props = {
   file: File;
@@ -79,11 +79,8 @@ export function AvatarCropModal({ file, onCancel, onConfirm }: Props) {
       const ctx = canvas.getContext("2d");
       if (!ctx) return;
       ctx.imageSmoothingQuality = "high";
-      // Что показано в круге: центр изображения смещён на pos, при масштабе scale.
-      // Координата центра картинки на экране = (BOX/2 + pos). Радиус круга = BOX/2.
-      // Пересчёт в координаты исходника:
       const k = OUT / BOX;
-      const srcSize = BOX / scale; // ширина видимой области в пикселях оригинала
+      const srcSize = BOX / scale;
       const srcCx = img.naturalWidth / 2 - pos.x / scale;
       const srcCy = img.naturalHeight / 2 - pos.y / scale;
       const sx = srcCx - srcSize / 2;

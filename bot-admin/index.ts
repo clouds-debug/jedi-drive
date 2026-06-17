@@ -1,5 +1,4 @@
 // Jedi Drive — Telegram bot for moderators (inline-buttons over booking cards).
-// Запуск: pm2 start "npx tsx --env-file=.env.local bot-admin/index.ts" --name jedi-bot-admin
 
 import {
   botT,
@@ -113,12 +112,10 @@ async function callDecision(lessonId: string, action: "confirm" | "reject", modN
 }
 
 async function handleUpdate(u: Update) {
-  // callback (язык или решение)
   if (u.callback_query) {
     const cq = u.callback_query;
     const data = cq.data ?? "";
 
-    // язык
     const langMatch = data.match(/^lang:(ru|ge)$/);
     if (langMatch && cq.message) {
       const newLang = langMatch[1] as BotLang;
@@ -137,7 +134,6 @@ async function handleUpdate(u: Update) {
       return;
     }
 
-    // действия по карточке ответа ученика
     const attMatch = data.match(/^att-(handled|cancel):(.+)$/);
     if (attMatch && cq.message) {
       const action = attMatch[1] === "cancel" ? "cancel" : "handled";
@@ -154,7 +150,6 @@ async function handleUpdate(u: Update) {
       return;
     }
 
-    // решение
     const decisionMatch = data.match(/^(confirm|reject):(.+)$/);
     if (!decisionMatch || !cq.message) {
       const lang = cq.message ? await getLang(cq.message.chat.id) : "ru";
@@ -185,7 +180,6 @@ async function handleUpdate(u: Update) {
     return;
   }
 
-  // text-сообщения
   if (u.message?.text) {
     const text = u.message.text.trim();
     const chatId = u.message.chat.id;

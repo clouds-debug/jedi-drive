@@ -59,7 +59,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: t("api.enroll.theory.duplicate") }, { status: 429 });
   }
 
-  // Дата-плейсхолдер: scheduled_at NOT NULL в схеме. Используем «далёкую» дату.
   const scheduledAt = "2099-01-01T00:00:00Z";
   const commentText = (body.comment ?? "").trim();
 

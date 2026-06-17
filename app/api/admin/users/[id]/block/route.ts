@@ -24,7 +24,6 @@ export async function POST(
     return NextResponse.json({ error: "Сам себя нельзя" }, { status: 400 });
   }
 
-  // Модератор не может блокировать админа/другого модератора — только админ.
   if (me.role !== "admin") {
     const target = await findUserById(id);
     if (target && (target.role === "admin" || target.role === "moderator")) {
@@ -47,8 +46,6 @@ export async function POST(
   const reason = (body.reason ?? "").trim() || "Заблокирован администратором";
   const result = await blockUser(id, me.id, reason);
 
-  // Тихое уведомление пользователю (он его не увидит — сессия удалена,
-  // но если он залогинится в будущем, увидит причину).
   try {
     await createNotification(
       id,

@@ -22,7 +22,6 @@ function ruDate(iso: string) {
 
 // POST /api/internal/mod-decision
 // Body: { lessonId: "123", action: "confirm" | "reject", modName?: string }
-// Бот-админ вызывает при клике на inline-кнопку модератором.
 export async function POST(req: Request) {
   if (!checkInternalAuth(req)) {
     return NextResponse.json({ ok: false, error: "unauthorized" }, { status: 401 });

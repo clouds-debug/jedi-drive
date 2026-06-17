@@ -1,6 +1,3 @@
-// Высокоуровневые dispatch-функции для отправки в TG из бизнес-логики.
-// Знают про БД (tg_mod_messages), используются из API-роутов.
-
 import { query } from "@/lib/db";
 import { getTgModeratorChatIds } from "@/lib/admin/moderators";
 import { isBotLang, type BotLang } from "@/lib/bot-i18n";
@@ -105,8 +102,6 @@ export async function dispatchAttendanceCard(d: AttendanceCardData): Promise<voi
   }
 }
 
-// Когда заявка закрыта вне TG (через веб-админку или инструктором) —
-// удаляем карточки во всех модерских чатах, чтобы не копилась переписка.
 export async function dispatchModCardClose(
   lessonId: string,
   _outcome: "confirmed" | "cancelled",

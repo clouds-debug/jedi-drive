@@ -27,9 +27,6 @@ export async function listUpcoming(
   limit = 20,
   offset = 0,
 ): Promise<LessonRow[]> {
-  // Показываем все pending (заявка ждёт решения, не важно когда) и confirmed.
-  // markStaleConfirmedCompleted уже перевёл прошлые confirmed в completed,
-  // так что они тут не появятся.
   return query<LessonRow>(
     `SELECT id::text, user_id::text, kind, format, instructor_id, instructor_name,
             scheduled_at, duration_min, location, status, notes, created_at
@@ -52,8 +49,6 @@ export async function countUpcoming(userId: string): Promise<number> {
   return Number(rows[0].c);
 }
 
-/** Переводит истёкшие confirmed-заявки в completed одним апдейтом.
- *  Буфер 1 час после конца занятия — на случай если админ подтвердил пост-фактум. */
 export async function markStaleConfirmedCompleted(): Promise<void> {
   await query(
     `UPDATE lessons SET status = 'completed'
@@ -72,10 +67,10 @@ export async function findLessonById(id: string): Promise<LessonRow | null> {
   return rows[0] ?? null;
 }
 
-/** Граница рабочего дня: первое окно для старта 08:45, последнее — 19:15. */
+
 export const DAY_START_MIN = 8 * 60 + 45;
 export const DAY_LAST_START_MIN = 19 * 60 + 15;
-/** Длительность урока — фиксированная для всех практик. */
+
 export const PRACTICE_DURATION_MIN = 45;
 
 function minToHHMM(m: number): string {
@@ -84,7 +79,7 @@ function minToHHMM(m: number): string {
   return `${String(h).padStart(2, "0")}:${String(mm).padStart(2, "0")}`;
 }
 
-/** Фиксированная сетка стартов на день: 08:45, 09:30, …, 19:15. */
+
 export function getStandardSlotTimes(stepMin = PRACTICE_DURATION_MIN): string[] {
   const out: string[] = [];
   for (let m = DAY_START_MIN; m <= DAY_LAST_START_MIN; m += stepMin) {
@@ -98,10 +93,6 @@ function hhmmToMin(t: string): number {
   return h * 60 + m;
 }
 
-/**
- * Возвращает фиксированную сетку стартов 08:45→19:15 c шагом durationMin
- * по тбилисскому времени, исключая занятые и (для сегодня) уже прошедшие слоты.
- */
 export async function getAvailableStartsForDay(
   instructorId: string,
   dayOffset: number,
@@ -123,7 +114,6 @@ export async function getAvailableStartsForDay(
   const taken = new Set(rows.map((r) => r.s));
   const allSlots = getStandardSlotTimes(durationMin).filter((t) => !taken.has(t));
 
-  // Слот должен быть строго в будущем по тбилисскому времени.
   const nowMs = Date.now();
   return allSlots.filter((t) => {
     return tbilisiSlotStringToUtcDate(dayOffset, t).getTime() > nowMs;

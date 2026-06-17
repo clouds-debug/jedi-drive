@@ -1,5 +1,4 @@
 // Jedi Drive — Telegram bot for students.
-// Запуск: pm2 start "npx tsx --env-file=.env.local bot-user/index.ts" --name jedi-bot-user
 
 import {
   botT,
@@ -115,7 +114,6 @@ async function handleUpdate(u: Update) {
     const cq = u.callback_query;
     const data = cq.data ?? "";
 
-    // язык
     const langMatch = data.match(/^lang:(ru|ge)$/);
     if (langMatch && cq.message) {
       const newLang = langMatch[1] as BotLang;
@@ -134,7 +132,6 @@ async function handleUpdate(u: Update) {
       return;
     }
 
-    // подтверждение посещения
     const attendMatch = data.match(/^attend:(yes|no):(.+)$/);
     if (attendMatch && cq.message) {
       const response = attendMatch[1] === "yes" ? "coming" : "not_coming";
@@ -147,7 +144,6 @@ async function handleUpdate(u: Update) {
         chatId,
       });
       if (r?.ok) {
-        // убираем кнопки и пишем ack
         await tg("editMessageReplyMarkup", {
           chat_id: chatId,
           message_id: cq.message.message_id,
@@ -181,7 +177,6 @@ async function handleUpdate(u: Update) {
     return;
   }
 
-  // постоянные кнопки внизу чата
   if (text === LANG_BTN_RU || text === LANG_BTN_GE) {
     const newLang: BotLang = text === LANG_BTN_GE ? "ge" : "ru";
     const setRes = await internalPost(`/api/internal/tg-lang`, {
@@ -227,7 +222,6 @@ async function handleUpdate(u: Update) {
   }
 }
 
-// Тик напоминаний: раз в 10 минут дёргаем endpoint, который сам решит кого уведомить.
 const REMINDER_TICK_MS = 10 * 60 * 1000;
 setInterval(() => {
   internalPost("/api/internal/tick-reminders", {})

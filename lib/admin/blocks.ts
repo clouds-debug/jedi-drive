@@ -1,6 +1,6 @@
 import { query } from "@/lib/db";
 
-/** Проверяет забанен ли IP. */
+
 export async function isIpBlocked(ip: string | null): Promise<boolean> {
   if (!ip || ip === "unknown") return false;
   const rows = await query<{ c: string }>(
@@ -10,7 +10,7 @@ export async function isIpBlocked(ip: string | null): Promise<boolean> {
   return Number(rows[0].c) > 0;
 }
 
-/** Обновляет last_ip юзера (best-effort, без ошибок). */
+
 export async function touchUserIp(userId: string, ip: string | null): Promise<void> {
   if (!ip || ip === "unknown") return;
   try {
@@ -23,7 +23,7 @@ export async function touchUserIp(userId: string, ip: string | null): Promise<vo
   }
 }
 
-/** Возвращает is_blocked + last_ip для юзера. */
+
 export async function getUserBlockState(
   userId: string,
 ): Promise<{ isBlocked: boolean; lastIp: string | null } | null> {
@@ -35,14 +35,13 @@ export async function getUserBlockState(
   return { isBlocked: rows[0].is_blocked, lastIp: rows[0].last_ip };
 }
 
-/** Блокирует пользователя и опционально его last_ip. */
+
 export async function blockUser(
   userId: string,
   blockedBy: string,
   reason: string,
 ): Promise<{ ipAdded: string | null }> {
   await query(`UPDATE users SET is_blocked = true WHERE id = $1`, [userId]);
-  // Сразу убиваем активные сессии — он не сможет продолжить тыкать.
   await query(`DELETE FROM sessions WHERE user_id = $1`, [userId]);
 
   const state = await getUserBlockState(userId);
@@ -59,7 +58,7 @@ export async function blockUser(
   return { ipAdded: state.lastIp };
 }
 
-/** Разблокирует юзера и (если есть) его IP. */
+
 export async function unblockUser(userId: string): Promise<void> {
   await query(`UPDATE users SET is_blocked = false WHERE id = $1`, [userId]);
   await query(

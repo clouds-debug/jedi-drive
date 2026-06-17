@@ -1,6 +1,3 @@
-// Локализация сообщений для Telegram-ботов (учеников и модераторов).
-// Используется и в bot-*/index.ts (через копию), и в lib/telegram.ts на сервере.
-
 export type BotLang = "ru" | "ge";
 
 export function isBotLang(s: string | null | undefined): s is BotLang {
@@ -70,7 +67,6 @@ const STRINGS: Dict = {
   "card.format.city": { ru: "Город", ge: "ქალაქი" },
   "card.format.padCity": { ru: "Площадка + город", ge: "მოედანი + ქალაქი" },
 
-  // Напоминания ученикам
   "remind.title.24h": { ru: "🔔 Напоминание — занятие завтра", ge: "🔔 შეხსენება — გაკვეთილი ხვალ" },
   "remind.title.12h": { ru: "🔔 Напоминание — через 12 часов", ge: "🔔 შეხსენება — 12 საათში" },
   "remind.title.2h": { ru: "🔔 Напоминание — через 2 часа", ge: "🔔 შეხსენება — 2 საათში" },
@@ -86,7 +82,6 @@ const STRINGS: Dict = {
     ge: "ცუდია. მალე დაგიკავშირდება მოდერატორი.",
   },
 
-  // Ответы учеников модерам
   "att.title.coming": { ru: "✅ <b>Ученик подтвердил, что придёт</b>", ge: "✅ <b>მოსწავლემ დაადასტურა, რომ მოვა</b>" },
   "att.title.notComing": { ru: "⚠️ <b>Ученик отказался от занятия</b>", ge: "⚠️ <b>მოსწავლემ უარი თქვა გაკვეთილზე</b>" },
   "att.btn.handled": { ru: "Обработано", ge: "დამუშავდა" },
@@ -108,9 +103,6 @@ export function botT(
   if (!entry) return key;
   const raw = entry[lang] ?? entry.ru;
   if (!params) return raw;
-  // Все подставляемые значения экранируются под HTML — шаблоны заранее
-  // допускают только безопасные теги (<b>, <code>, <a>), пользовательские
-  // данные не должны их вносить.
   return raw.replace(/\{\{(\w+)\}\}/g, (_, name) => {
     const v = params[name];
     if (v === undefined) return `{{${name}}}`;
@@ -127,9 +119,6 @@ export function langKeyboard() {
   ];
 }
 
-// Постоянная клавиатура внизу чата с двумя кнопками — текст которых стабилен
-// (не зависит от текущего языка пользователя), чтобы кнопки выглядели одинаково
-// у всех. При тапе бот ловит этот текст и переключает язык.
 export const LANG_BTN_RU = "🇷🇺 Русский";
 export const LANG_BTN_GE = "🇬🇪 ქართული";
 

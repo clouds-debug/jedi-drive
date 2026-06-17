@@ -138,7 +138,6 @@ export async function POST(req: NextRequest) {
   );
   const lessonId = inserted[0]?.id;
 
-  // карточка модерам только для pending заявок (auto-confirm не требует решения)
   if (!autoConfirm && lessonId) {
     const fullName = [me.first_name, me.last_name].filter(Boolean).join(" ") || me.login;
     void dispatchModBookingCard({

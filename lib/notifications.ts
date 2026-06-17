@@ -71,8 +71,6 @@ export async function createNotification(
     [userId, title, body, kind],
   );
 
-  // fire-and-forget: дублируем в TG если юзер привязан.
-  // Не ждём — медленный TG не должен тормозить ответ API.
   void sendToTelegramIfLinked(userId, title, body).catch(() => {});
 }
 

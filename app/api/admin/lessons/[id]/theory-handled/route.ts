@@ -10,8 +10,6 @@ import {
 export const runtime = "nodejs";
 
 // POST /api/admin/lessons/[id]/theory-handled
-// Помечает заявку на теорию как обработанную (status='completed').
-// Доступно админам и модераторам.
 export async function POST(
   _req: NextRequest,
   ctx: { params: Promise<{ id: string }> },

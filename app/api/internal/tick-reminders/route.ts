@@ -73,12 +73,8 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok: false, error: "unauthorized" }, { status: 401 });
   }
 
-  // Заодно с тиком — добиваем прошедшие confirmed → completed.
-  // Раньше это вызывалось на каждой странице через GET, что было side-effect-ом.
   await markStaleConfirmedCompleted().catch(() => {});
 
-  // Берём все confirmed practice занятия в ближайшие 30 часов, у которых
-  // user_attendance ещё не выставлен и юзер привязан к TG.
   const rows = await query<Candidate>(
     `SELECT l.id::text, l.user_id::text,
             l.scheduled_at, l.created_at,

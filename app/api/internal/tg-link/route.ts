@@ -7,8 +7,6 @@ export const dynamic = "force-dynamic";
 
 // POST /api/internal/tg-link
 // Body: { token: "ABC123", chatId: 12345 }
-// Бот вызывает при /start <token>. Если токен валидный и chat_id не заблокирован —
-// привязывает users.telegram_chat_id, чистит токен.
 export async function POST(req: Request) {
   if (!checkInternalAuth(req)) {
     return NextResponse.json({ ok: false, error: "unauthorized" }, { status: 401 });
@@ -27,7 +25,6 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok: false, error: "missing token or chatId" }, { status: 400 });
   }
 
-  // забанен ли chat_id?
   const blocked = await query<{ chat_id: string }>(
     `SELECT chat_id::text AS chat_id FROM blocked_chat_ids WHERE chat_id = $1`,
     [chatId],
@@ -39,7 +36,6 @@ export async function POST(req: Request) {
     );
   }
 
-  // токен жив максимум 30 минут
   const rows = await query<{ id: string; first_name: string | null; is_blocked: boolean }>(
     `SELECT id::text, first_name, is_blocked
      FROM users
@@ -62,7 +58,6 @@ export async function POST(req: Request) {
     );
   }
 
-  // chat_id уже привязан к другому юзеру?
   const exists = await query<{ id: string }>(
     `SELECT id::text FROM users WHERE telegram_chat_id = $1 AND id::text <> $2 LIMIT 1`,
     [chatId, u.id],

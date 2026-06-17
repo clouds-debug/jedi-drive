@@ -7,7 +7,6 @@ export const dynamic = "force-dynamic";
 
 // POST /api/internal/tg-status
 // Body: { chatId: 12345 }
-// Бот вызывает при простом /start (без токена) чтобы понять — это новый юзер или уже привязанный.
 export async function POST(req: Request) {
   if (!checkInternalAuth(req)) {
     return NextResponse.json({ ok: false, error: "unauthorized" }, { status: 401 });

@@ -38,7 +38,6 @@ export async function getTrustThresholdPractice(): Promise<number> {
 export async function getTrustThreshold(
   kind: "theory" | "practice",
 ): Promise<number> {
-  // Только практика имеет авто-подтверждение. Теория всегда ручная.
   if (kind === "theory") return Number.POSITIVE_INFINITY;
   return getTrustThresholdPractice();
 }

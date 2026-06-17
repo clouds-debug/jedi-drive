@@ -6,7 +6,7 @@ export type InstructorOverride = {
   is_deleted: boolean;
 };
 
-/** Возвращает мапу overrides для всех известных инструкторов (где есть запись). */
+
 export async function getInstructorOverrides(): Promise<
   Map<string, InstructorOverride>
 > {
@@ -18,7 +18,7 @@ export async function getInstructorOverrides(): Promise<
   return out;
 }
 
-/** ID-шники инструкторов, которые не должны показываться на публичной части. */
+
 export async function getInvisibleInstructorIds(): Promise<Set<string>> {
   const rows = await query<{ instructor_id: string }>(
     `SELECT instructor_id FROM instructor_overrides
@@ -58,7 +58,7 @@ export async function markInstructorDeleted(
   );
 }
 
-/** Сбрасывает роль всех пользователей с этим instructor_ref до student. */
+
 export async function downgradeInstructorUsers(
   instructorId: string,
 ): Promise<string[]> {
@@ -68,7 +68,6 @@ export async function downgradeInstructorUsers(
      RETURNING id::text`,
     [instructorId],
   );
-  // Сессии этих пользователей убираем — чтобы они не остались в админке.
   for (const r of rows) {
     await query(`DELETE FROM sessions WHERE user_id = $1`, [r.id]);
   }

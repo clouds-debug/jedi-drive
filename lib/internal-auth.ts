@@ -1,7 +1,5 @@
 import { timingSafeEqual } from "node:crypto";
 
-// Безопасное сравнение Bearer-токена с константой из env, защищённое от
-// timing-атак. Возвращает false если токен не задан или не совпал.
 export function checkInternalAuth(req: Request): boolean {
   const expected = process.env.INTERNAL_API_TOKEN;
   if (!expected) return false;

@@ -16,7 +16,6 @@ export function TopicProgressBadge({ topicId, total }: { topicId: string; total:
   }, [topicId]);
 
   if (!hydrated || !progress) return null;
-  // подавляем unused-prop warning
   void total;
 
   const pct = progress.total > 0 ? Math.round((progress.best / progress.total) * 100) : 0;

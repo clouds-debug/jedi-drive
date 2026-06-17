@@ -37,8 +37,6 @@ export async function POST(
     return NextResponse.json({ error: "Неизвестная роль" }, { status: 400 });
   }
 
-  // Для инструктора используем стабильный ref на user.id (без привязки к data.ts).
-  // Для других ролей чистим instructor_ref.
   const instructorRef = role === "instructor" ? `u-${id}` : null;
 
   await query(
@@ -47,7 +45,6 @@ export async function POST(
     [role, instructorRef, id],
   );
 
-  // Сбрасываем сессии — пусть зайдёт заново с новой ролью.
   await query(`DELETE FROM sessions WHERE user_id = $1`, [id]);
 
   try {

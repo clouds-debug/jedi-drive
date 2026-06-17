@@ -55,7 +55,6 @@ export async function POST(
     return NextResponse.json({ error: "Неверная дата" }, { status: 400 });
   }
 
-  // Опционально — смена инструктора.
   let newInstructor: { id: string; name: string } | null = null;
   if (lesson.kind === "practice" && body.instructorId) {
     const inst = instructors.find((i) => i.id === body.instructorId);
@@ -65,7 +64,6 @@ export async function POST(
     newInstructor = { id: inst.id, name: inst.name };
   }
 
-  // Для практики — проверка свободного слота у инструктора (нового или текущего).
   const effectiveInstructorId = newInstructor?.id ?? lesson.instructor_id;
   if (lesson.kind === "practice" && effectiveInstructorId) {
     const dayOffset = dayOffsetFromUtc(newDate);

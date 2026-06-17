@@ -48,7 +48,6 @@ export default async function InstructorsPage() {
 
   const staticInstructors = allInstructors.filter((i) => !invisibleIds.has(i.id));
 
-  // Карточки от живых инструкторов (instructor_profiles).
   const liveInstructors: Instructor[] = dbCards.map((c) => {
     const name =
       [c.first_name, c.last_name].filter(Boolean).join(" ") || t("instructors.fallbackName", { id: c.user_id });
@@ -82,7 +81,6 @@ export default async function InstructorsPage() {
     if (!invisibleIds.has(id)) aggregates[id] = a;
   }
 
-  // Эффективные рейтинги: live из БД где есть, иначе seed-значения.
   const effective = instructors.map((i) => {
     const a = aggregatesMap.get(i.id);
     return {

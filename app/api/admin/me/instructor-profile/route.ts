@@ -56,7 +56,6 @@ export async function PUT(req: NextRequest) {
     return NextResponse.json({ error: "Bad JSON" }, { status: 400 });
   }
 
-  // Имя/фамилия — на users
   const errors: { field: string; message: string }[] = [];
   const firstName =
     typeof body.firstName === "string" ? body.firstName.trim() : "";

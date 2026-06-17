@@ -143,7 +143,7 @@ export async function clearInstructorAvatar(userId: string): Promise<void> {
   );
 }
 
-/** Опубликованные инструкторы для публичной части сайта. */
+
 export async function listPublishedInstructors(): Promise<InstructorPublicCard[]> {
   const rows = await query<{
     user_id: string;

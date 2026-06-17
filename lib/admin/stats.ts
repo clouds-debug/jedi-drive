@@ -78,10 +78,6 @@ export type MonthlyRow = {
   cancelled: number;
 };
 
-/**
- * Возвращает помесячно за последние N месяцев + текущий.
- * Если передан year — фильтрует только этот год.
- */
 export async function getMonthly(opts: {
   months?: number;
   year?: number;

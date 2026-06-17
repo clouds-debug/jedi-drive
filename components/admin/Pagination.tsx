@@ -6,8 +6,8 @@ import { useT } from "@/lib/i18n/client";
 type Props = {
   page: number;
   totalPages: number;
-  baseHref: string; // например: "/admin/bookings?status=pending"
-  pageParam?: string; // имя query-параметра. По умолчанию "page".
+  baseHref: string;
+  pageParam?: string;
 };
 
 function withPage(baseHref: string, page: number, param: string): string {

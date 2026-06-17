@@ -60,7 +60,6 @@ export async function POST(
     );
   }
 
-  // Опционально — смена инструктора (только для практики).
   let newInstructor: { id: string; name: string } | null = null;
   if (lesson.kind === "practice" && body.instructorId) {
     const inst = instructors.find((i) => i.id === body.instructorId);
@@ -70,7 +69,6 @@ export async function POST(
     newInstructor = { id: inst.id, name: inst.name };
   }
 
-  // Для практики проверяем что слот у инструктора свободен.
   const effectiveInstructorId = newInstructor?.id ?? lesson.instructor_id;
   if (lesson.kind === "practice" && effectiveInstructorId) {
     const dayOffset = Math.floor((newDate.getTime() - startOfTodayUTC()) / 86400000);

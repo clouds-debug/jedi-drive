@@ -80,7 +80,6 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  // Проверка свободного слота — слот не должен быть занят.
   const taken = await getTakenTimesForDay(me.instructor_ref, body.dayOffset);
   if (taken.includes(body.time)) {
     return NextResponse.json(

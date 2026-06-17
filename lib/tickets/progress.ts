@@ -1,14 +1,11 @@
-// Progress по билетам — храним в localStorage браузера. Без бэкенда,
-// привязано к устройству/браузеру конкретного ученика.
-
 const KEY = "jd_tickets_progress_v1";
 
 export type TopicProgress = {
-  best: number; // лучший результат — сколько верных
-  total: number; // из скольких вопросов
-  lastCorrect: number; // последний результат
-  lastAt: number; // unix ms, последняя попытка
-  attempts: number; // сколько раз проходили
+  best: number;
+  total: number;
+  lastCorrect: number;
+  lastAt: number;
+  attempts: number;
 };
 
 export type ExamAttempt = {
@@ -24,7 +21,7 @@ export type ProgressData = {
     last: ExamAttempt | null;
     attempts: number;
   };
-  /** Список id вопросов, на которые ученик ответил неверно и ещё не закрыл. */
+  
   mistakes: string[];
 };
 
@@ -60,7 +57,6 @@ function writeProgress(data: ProgressData) {
     window.localStorage.setItem(KEY, JSON.stringify(data));
     window.dispatchEvent(new CustomEvent("jd-tickets-progress"));
   } catch {
-    // quota / private mode — игнорим
   }
 }
 
@@ -104,8 +100,6 @@ export function getTopicProgress(topicId: string): TopicProgress | null {
   return readProgress().topics[topicId] ?? null;
 }
 
-/** Записывает результат по конкретному вопросу. Неверный — добавляет в "работу над ошибками",
- *  верный — снимает из неё. */
 export function recordQuestionResult(qid: string, isCorrect: boolean): void {
   if (!isBrowser()) return;
   const data = readProgress();

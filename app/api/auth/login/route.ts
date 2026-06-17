@@ -26,9 +26,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Bad JSON" }, { status: 400 });
   }
 
-  // На логине формат пароля не валидируем — старые юзеры с короткими/слабыми
-  // паролями всё ещё должны входить. Сравниваем как есть с хэшем в БД.
-  // Только базовая проверка что поле не пустое.
   if (typeof body.password !== "string" || body.password.length === 0) {
     return NextResponse.json(
       { errors: [{ field: "password", message: "Пароль обязателен" }] },

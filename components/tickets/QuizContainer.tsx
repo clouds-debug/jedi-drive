@@ -32,7 +32,6 @@ export function QuizContainer() {
     if (mode === "mistakes") {
       const ids = new Set(getMistakeIds());
       const qs = allQuestions.filter((q) => ids.has(q.id));
-      // Перемешиваем порядок, чтобы заучивать не позицию а смысл
       const shuffled = [...qs].sort(() => Math.random() - 0.5);
       setData({ questions: shuffled, topic: undefined });
       return;
