@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { findUserByLogin, verifyPassword } from "@/lib/auth/users";
-import { normalizeLogin, validateLogin, validatePassword } from "@/lib/auth/validate";
+import { normalizeLogin, validateLogin } from "@/lib/auth/validate";
 import { createSession, setSessionCookie } from "@/lib/auth/session";
 import {
   getClientIp,
@@ -26,7 +26,16 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Bad JSON" }, { status: 400 });
   }
 
-  const errs = [validateLogin(body.login), validatePassword(body.password)].filter(
+  // На логине формат пароля не валидируем — старые юзеры с короткими/слабыми
+  // паролями всё ещё должны входить. Сравниваем как есть с хэшем в БД.
+  // Только базовая проверка что поле не пустое.
+  if (typeof body.password !== "string" || body.password.length === 0) {
+    return NextResponse.json(
+      { errors: [{ field: "password", message: "Пароль обязателен" }] },
+      { status: 400 },
+    );
+  }
+  const errs = [validateLogin(body.login)].filter(
     (e): e is NonNullable<typeof e> => e !== null,
   );
   if (errs.length) return NextResponse.json({ errors: errs }, { status: 400 });
