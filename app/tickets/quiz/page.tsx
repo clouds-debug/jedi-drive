@@ -17,7 +17,7 @@ export default async function QuizPage() {
     <>
       <Nav />
       <main className="bg-navy min-h-[calc(100vh-200px)] py-12">
-        <div className="mx-auto max-w-3xl px-6 lg:px-10">
+        <div className="mx-auto max-w-7xl px-6 lg:px-10">
           <Suspense fallback={<div className="text-muted-on-navy text-center py-20">{t("tickets.quiz.loading")}</div>}>
             <QuizContainer />
           </Suspense>
