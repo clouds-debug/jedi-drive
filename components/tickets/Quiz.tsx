@@ -91,7 +91,7 @@ export function Quiz({ questions, mode, topic }: QuizProps) {
 
       <article
         key={current.id}
-        className="relative bg-white/[0.04] border border-white/15 border-l-[3px] border-l-orange rounded-2xl p-6 sm:p-8 lg:p-12 lg:max-w-[1280px] lg:mx-auto overflow-hidden animate-card-in"
+        className="relative bg-white/[0.04] border border-white/15 border-l-[3px] border-l-orange rounded-2xl p-6 sm:p-8 lg:p-14 lg:max-w-[1440px] lg:mx-auto overflow-hidden animate-card-in"
       >
         <div className="absolute -right-12 -top-12 w-56 h-56 bg-orange/[0.10] rounded-full blur-[80px] pointer-events-none" aria-hidden />
 
@@ -107,16 +107,16 @@ export function Quiz({ questions, mode, topic }: QuizProps) {
         </div>
 
         {current.image && (
-          <div className="relative mb-5 lg:mb-7 rounded-xl overflow-hidden border border-white/10 bg-[#0F1430]">
+          <div className="relative mb-5 lg:mb-8 rounded-xl overflow-hidden border border-white/10 bg-[#0F1430]">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={current.image}
               alt={t("tickets.quiz.image.alt")}
-              className="w-full max-h-[280px] lg:max-h-[360px] object-contain"
+              className="w-full max-h-[280px] lg:max-h-[420px] object-contain"
             />
           </div>
         )}
-        <h2 className="relative text-[18px] sm:text-[20px] lg:text-[24px] font-medium text-white leading-snug mb-6 lg:mb-9">
+        <h2 className="relative text-[18px] sm:text-[20px] lg:text-[26px] font-medium text-white leading-snug mb-6 lg:mb-10">
           <EditableText storageKey={`tickets.q.${current.id}.text.${locale}`} multiline>
             {pick(current.text, locale)}
           </EditableText>
@@ -128,9 +128,12 @@ export function Quiz({ questions, mode, topic }: QuizProps) {
             const isCorrect = i === current.correctIndex;
             const showCorrect = isSelected && isCorrect;
             const showWrong = isSelected && !isCorrect;
+            const isLoneLast =
+              current.options.length % 2 === 1 && i === current.options.length - 1;
 
             let cls =
-              "relative w-full text-left bg-white/[0.03] border border-white/10 rounded-lg px-4 py-3.5 lg:px-5 lg:py-4 text-[14px] lg:text-[15px] text-white transition-all";
+              "relative w-full text-left bg-white/[0.03] border border-white/10 rounded-lg px-4 py-3.5 lg:px-6 lg:py-5 text-[14px] lg:text-[16px] text-white transition-all";
+            if (isLoneLast) cls += " lg:col-span-2";
             if (showCorrect) cls += " border-[#22C55E]/60 bg-[#22C55E]/[0.08]";
             else if (showWrong) cls += " border-orange/60 bg-orange/[0.08]";
             else if (!hasAnswered) cls += " hover:bg-white/[0.06] hover:border-white/25 cursor-pointer";
