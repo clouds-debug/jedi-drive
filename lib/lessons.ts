@@ -101,17 +101,26 @@ export async function getAvailableStartsForDay(
 ): Promise<string[]> {
   const { start, end } = tbilisiDayBoundsUtc(dayOffset);
 
-  const rows = await query<{ s: string }>(
-    `SELECT to_char(scheduled_at AT TIME ZONE 'Asia/Tbilisi', 'HH24:MI') AS s
-     FROM lessons
-     WHERE instructor_id = $1
-       AND scheduled_at >= $2 AND scheduled_at < $3
-       AND status IN ('pending','confirmed')
-       AND ($4::bigint IS NULL OR id <> $4::bigint)`,
-    [instructorId, start.toISOString(), end.toISOString(), excludeLessonId ?? null],
-  );
+  const [busyRows, frozenRows] = await Promise.all([
+    query<{ s: string }>(
+      `SELECT to_char(scheduled_at AT TIME ZONE 'Asia/Tbilisi', 'HH24:MI') AS s
+       FROM lessons
+       WHERE instructor_id = $1
+         AND scheduled_at >= $2 AND scheduled_at < $3
+         AND status IN ('pending','confirmed')
+         AND ($4::bigint IS NULL OR id <> $4::bigint)`,
+      [instructorId, start.toISOString(), end.toISOString(), excludeLessonId ?? null],
+    ),
+    query<{ s: string }>(
+      `SELECT to_char(scheduled_at AT TIME ZONE 'Asia/Tbilisi', 'HH24:MI') AS s
+       FROM instructor_frozen_slots
+       WHERE instructor_id = $1
+         AND scheduled_at >= $2 AND scheduled_at < $3`,
+      [instructorId, start.toISOString(), end.toISOString()],
+    ).catch(() => [] as { s: string }[]),
+  ]);
 
-  const taken = new Set(rows.map((r) => r.s));
+  const taken = new Set([...busyRows.map((r) => r.s), ...frozenRows.map((r) => r.s)]);
   const allSlots = getStandardSlotTimes(durationMin).filter((t) => !taken.has(t));
 
   const nowMs = Date.now();

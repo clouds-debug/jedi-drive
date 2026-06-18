@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useContentCtx } from "./ContentProvider";
+import { useLocale } from "@/lib/i18n/client";
 
 type Props = {
   storageKey: string;
@@ -19,6 +20,7 @@ export function EditableText({
   className,
 }: Props) {
   const { overrides, isEditor, setLocalOverride } = useContentCtx();
+  const locale = useLocale();
   const current = overrides[storageKey] ?? defaultText;
 
   const [editing, setEditing] = useState(false);
@@ -51,7 +53,9 @@ export function EditableText({
         method: value === defaultText ? "DELETE" : "PUT",
         headers: { "content-type": "application/json" },
         body: JSON.stringify(
-          value === defaultText ? { key: storageKey } : { key: storageKey, value },
+          value === defaultText
+            ? { key: storageKey, locale }
+            : { key: storageKey, value, locale },
         ),
       });
       const data = await res.json().catch(() => ({}));

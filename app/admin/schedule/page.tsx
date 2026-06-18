@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { requireAdminRole } from "@/lib/auth/require";
-import { getInstructorDay } from "@/lib/admin/schedule";
+import { getInstructorDay, getInstructorFrozenDay } from "@/lib/admin/schedule";
 import { InstructorScheduleGrid } from "@/components/admin/InstructorScheduleGrid";
 import { getT } from "@/lib/i18n/server";
 
@@ -27,7 +27,10 @@ export default async function SchedulePage() {
   }
 
   const initialDay = 0;
-  const rows = await getInstructorDay(user.instructor_ref, initialDay);
+  const [rows, initialFrozen] = await Promise.all([
+    getInstructorDay(user.instructor_ref, initialDay),
+    getInstructorFrozenDay(user.instructor_ref, initialDay),
+  ]);
   const initialLessons = rows.map((l) => ({
     id: l.id,
     userId: l.user_id,
@@ -78,9 +81,14 @@ export default async function SchedulePage() {
       <div className="flex items-center gap-4 text-[11.5px] text-muted-on-navy mb-7">
         <Legend color="border-emerald-500/40 bg-emerald-500/[0.04]" label={t("admin.schedule.legend.free")} />
         <Legend color="border-orange/60 bg-orange/[0.06]" label={t("admin.schedule.legend.busy")} />
+        <Legend color="border-white/30 bg-white/[0.04]" label={t("admin.schedule.legend.frozen")} />
       </div>
 
-      <InstructorScheduleGrid initialDay={initialDay} initialLessons={initialLessons} />
+      <InstructorScheduleGrid
+        initialDay={initialDay}
+        initialLessons={initialLessons}
+        initialFrozen={initialFrozen}
+      />
     </div>
   );
 }

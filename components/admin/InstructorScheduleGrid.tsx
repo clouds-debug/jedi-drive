@@ -80,19 +80,23 @@ function useFormatLabel() {
 export function InstructorScheduleGrid({
   initialDay,
   initialLessons,
+  initialFrozen = [],
 }: {
   initialDay: number;
   initialLessons: Lesson[];
+  initialFrozen?: string[];
 }) {
   const { t } = useT();
   const router = useRouter();
   const dayMeta = useDayMeta();
   const [dayOffset, setDayOffset] = useState(initialDay);
   const [lessons, setLessons] = useState<Lesson[]>(initialLessons);
+  const [frozen, setFrozen] = useState<string[]>(initialFrozen);
   const [loading, setLoading] = useState(false);
   const [selectedSlot, setSelectedSlot] = useState<string | null>(null);
 
   const [bookingSlot, setBookingSlot] = useState<string | null>(null);
+  const frozenSet = useMemo(() => new Set(frozen), [frozen]);
 
   const slotTimes = useMemo(() => buildSlotTimes(), []);
   const lessonByTime = useMemo(() => {
@@ -117,11 +121,16 @@ export function InstructorScheduleGrid({
     setLoading(true);
     fetch(`/api/admin/schedule?dayOffset=${dayOffset}`)
       .then((r) => (r.ok ? r.json() : Promise.reject()))
-      .then((d: { lessons: Lesson[] }) => {
-        if (!cancelled) setLessons(d.lessons);
+      .then((d: { lessons: Lesson[]; frozen?: string[] }) => {
+        if (cancelled) return;
+        setLessons(d.lessons);
+        setFrozen(d.frozen ?? []);
       })
       .catch(() => {
-        if (!cancelled) setLessons([]);
+        if (!cancelled) {
+          setLessons([]);
+          setFrozen([]);
+        }
       })
       .finally(() => {
         if (!cancelled) setLoading(false);
@@ -130,6 +139,25 @@ export function InstructorScheduleGrid({
       cancelled = true;
     };
   }, [dayOffset, initialDay]);
+
+  async function toggleFreeze(time: string) {
+    const isFrozen = frozenSet.has(time);
+    if (isFrozen && !confirm(t("admin.schedule.modal.unfreezeConfirm"))) return;
+    const res = await fetch("/api/admin/schedule/freeze", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        dayOffset,
+        time,
+        action: isFrozen ? "unfreeze" : "freeze",
+      }),
+    });
+    if (!res.ok) return;
+    setFrozen((prev) =>
+      isFrozen ? prev.filter((s) => s !== time) : [...prev, time],
+    );
+    setBookingSlot(null);
+  }
 
   const days = Array.from({ length: DAYS_AHEAD }, (_, i) => dayMeta(i));
   const selectedLesson = selectedSlot ? lessonByTime.get(selectedSlot) : null;
@@ -173,6 +201,7 @@ export function InstructorScheduleGrid({
           {slotTimes.map((time) => {
             const lesson = lessonByTime.get(time);
             const busy = !!lesson;
+            const isFrozen = !busy && frozenSet.has(time);
             const studentName = lesson
               ? lesson.guestName
                 ?? ([lesson.userFirstName, lesson.userLastName].filter(Boolean).join(" ") ||
@@ -183,14 +212,20 @@ export function InstructorScheduleGrid({
               <button
                 key={time}
                 type="button"
-                onClick={() => (busy ? setSelectedSlot(time) : setBookingSlot(time))}
+                onClick={() => {
+                  if (busy) setSelectedSlot(time);
+                  else if (isFrozen) toggleFreeze(time);
+                  else setBookingSlot(time);
+                }}
                 className={`text-left rounded-lg border-2 px-3 py-2.5 transition-colors cursor-pointer ${
                   busy
                     ? "border-orange/60 bg-orange/[0.06] hover:bg-orange/[0.12]"
-                    : "border-emerald-500/40 bg-emerald-500/[0.04] hover:bg-emerald-500/[0.10]"
+                    : isFrozen
+                      ? "border-white/30 bg-white/[0.04] hover:bg-white/[0.08]"
+                      : "border-emerald-500/40 bg-emerald-500/[0.04] hover:bg-emerald-500/[0.10]"
                 }`}
               >
-                <div className="font-mono text-[14px] text-white tabular-nums">
+                <div className={`font-mono text-[14px] tabular-nums ${isFrozen ? "text-muted-on-navy line-through" : "text-white"}`}>
                   {time}
                 </div>
                 <div className="text-[11.5px] mt-0.5 truncate">
@@ -199,6 +234,8 @@ export function InstructorScheduleGrid({
                       {studentName}
                       {lesson?.status === "pending" ? " · ⏳" : ""}
                     </span>
+                  ) : isFrozen ? (
+                    <span className="text-muted-on-navy">{t("admin.schedule.slot.frozen")}</span>
                   ) : (
                     <span className="text-emerald-300/80">{t("admin.schedule.freeTake")}</span>
                   )}
@@ -250,6 +287,7 @@ export function InstructorScheduleGrid({
           dayOffset={dayOffset}
           time={bookingSlot}
           onClose={() => setBookingSlot(null)}
+          onFreeze={() => toggleFreeze(bookingSlot)}
           onDone={() => {
             setBookingSlot(null);
             triggerReload(dayOffset, setLessons, setLoading);
@@ -279,11 +317,13 @@ function GuestBookingModal({
   time,
   onClose,
   onDone,
+  onFreeze,
 }: {
   dayOffset: number;
   time: string;
   onClose: () => void;
   onDone: () => void;
+  onFreeze: () => void;
 }) {
   const { t } = useT();
   const [name, setName] = useState("");
@@ -428,22 +468,33 @@ function GuestBookingModal({
               </div>
             )}
 
-            <div className="flex justify-end gap-2 pt-2">
+            <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-white/[0.06] mt-1">
               <button
                 type="button"
-                onClick={onClose}
+                onClick={onFreeze}
                 disabled={busy}
-                className="text-[13px] px-4 py-2 rounded-lg text-muted-on-navy hover:text-white transition-colors"
+                className="text-[12.5px] text-muted-on-navy hover:text-white border border-white/15 hover:border-white/30 px-3 py-1.5 rounded-lg transition-colors disabled:opacity-50"
+                title={t("admin.schedule.modal.freezeNote")}
               >
-                {t("common.cancel")}
+                {t("admin.schedule.modal.freezeBtn")}
               </button>
-              <button
-                type="submit"
-                disabled={busy}
-                className="text-[13px] bg-orange hover:bg-orange/90 text-white px-4 py-2 rounded-lg disabled:opacity-60 transition-colors"
-              >
-                {busy ? t("admin.schedule.modal.saving") : t("admin.schedule.modal.takeSlot")}
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={onClose}
+                  disabled={busy}
+                  className="text-[13px] px-4 py-2 rounded-lg text-muted-on-navy hover:text-white transition-colors"
+                >
+                  {t("common.cancel")}
+                </button>
+                <button
+                  type="submit"
+                  disabled={busy}
+                  className="text-[13px] bg-orange hover:bg-orange/90 text-white px-4 py-2 rounded-lg disabled:opacity-60 transition-colors"
+                >
+                  {busy ? t("admin.schedule.modal.saving") : t("admin.schedule.modal.takeSlot")}
+                </button>
+              </div>
             </div>
           </form>
         </div>

@@ -1,6 +1,7 @@
 import { cookies } from "next/headers";
 import { readSession } from "@/lib/auth/session";
 import { findUserById } from "@/lib/auth/users";
+import { getLocale } from "@/lib/i18n/server";
 import { getAllContentOverrides } from "./overrides";
 
 export const EDITOR_MODE_COOKIE = "jd_editor_mode";
@@ -10,8 +11,9 @@ export async function loadContentForLayout(): Promise<{
   isEditor: boolean;
   canEdit: boolean;
 }> {
+  const locale = await getLocale();
   const [overrides, session, cookieStore] = await Promise.all([
-    getAllContentOverrides().catch(() => ({})),
+    getAllContentOverrides(locale).catch(() => ({})),
     readSession(),
     cookies(),
   ]);

@@ -44,3 +44,42 @@ export async function getInstructorDay(
     [instructorRef, start.toISOString(), end.toISOString()],
   );
 }
+
+export async function getInstructorFrozenDay(
+  instructorRef: string,
+  dayOffset: number,
+): Promise<string[]> {
+  const { start, end } = tbilisiDayBoundsUtc(dayOffset);
+  const rows = await query<{ hhmm: string }>(
+    `SELECT to_char(scheduled_at AT TIME ZONE 'Asia/Tbilisi', 'HH24:MI') AS hhmm
+     FROM instructor_frozen_slots
+     WHERE instructor_id = $1
+       AND scheduled_at >= $2 AND scheduled_at < $3`,
+    [instructorRef, start.toISOString(), end.toISOString()],
+  ).catch(() => [] as { hhmm: string }[]);
+  return rows.map((r) => r.hhmm);
+}
+
+export async function freezeSlot(
+  instructorRef: string,
+  scheduledAt: string,
+  createdBy: string,
+): Promise<void> {
+  await query(
+    `INSERT INTO instructor_frozen_slots (instructor_id, scheduled_at, created_by)
+     VALUES ($1, $2, $3)
+     ON CONFLICT (instructor_id, scheduled_at) DO NOTHING`,
+    [instructorRef, scheduledAt, createdBy],
+  );
+}
+
+export async function unfreezeSlot(
+  instructorRef: string,
+  scheduledAt: string,
+): Promise<void> {
+  await query(
+    `DELETE FROM instructor_frozen_slots
+     WHERE instructor_id = $1 AND scheduled_at = $2`,
+    [instructorRef, scheduledAt],
+  );
+}

@@ -12,14 +12,14 @@ import {
 } from "@/lib/telegram";
 
 async function effectiveModChats(): Promise<number[]> {
-  const fromEnv = modChatIds();
   let fromDb: number[] = [];
   try {
     fromDb = await getTgModeratorChatIds();
   } catch (e) {
     console.error("[tg-dispatch] failed to load moderators from DB", e);
   }
-  return Array.from(new Set([...fromEnv, ...fromDb]));
+  if (fromDb.length > 0) return fromDb;
+  return modChatIds();
 }
 
 async function getModLang(chatId: number): Promise<BotLang> {

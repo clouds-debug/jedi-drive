@@ -74,13 +74,24 @@ export function Quiz({ questions, mode, topic }: QuizProps) {
     }
   }
 
+  const correctCount = answers.reduce<number>((acc, a, i) => {
+    if (a !== null && a === questions[i].correctIndex) return acc + 1;
+    return acc;
+  }, 0);
+  const answeredCount = answers.filter((a) => a !== null).length;
+
   return (
     <div className="space-y-6">
-      <ProgressBar index={index} total={questions.length} />
+      <ProgressBar
+        index={index}
+        total={questions.length}
+        correct={mode === "exam" ? correctCount : undefined}
+        answered={mode === "exam" ? answeredCount : undefined}
+      />
 
       <article
         key={current.id}
-        className="relative bg-white/[0.04] border border-white/15 border-l-[3px] border-l-orange rounded-2xl p-6 sm:p-8 overflow-hidden animate-card-in"
+        className="relative bg-white/[0.04] border border-white/15 border-l-[3px] border-l-orange rounded-2xl p-6 sm:p-8 lg:p-10 lg:max-w-[1080px] lg:mx-auto overflow-hidden animate-card-in"
       >
         <div className="absolute -right-12 -top-12 w-56 h-56 bg-orange/[0.10] rounded-full blur-[80px] pointer-events-none" aria-hidden />
 
@@ -105,7 +116,7 @@ export function Quiz({ questions, mode, topic }: QuizProps) {
             />
           </div>
         )}
-        <h2 className="relative text-[18px] sm:text-[20px] font-medium text-white leading-snug mb-6">
+        <h2 className="relative text-[18px] sm:text-[20px] lg:text-[22px] font-medium text-white leading-snug mb-6 lg:mb-8">
           <EditableText storageKey={`tickets.q.${current.id}.text.${locale}`} multiline>
             {pick(current.text, locale)}
           </EditableText>
@@ -119,14 +130,29 @@ export function Quiz({ questions, mode, topic }: QuizProps) {
             const showWrong = isSelected && !isCorrect;
 
             let cls =
-              "relative w-full text-left bg-white/[0.03] border border-white/10 rounded-lg px-4 py-3.5 text-[14px] text-white transition-all";
+              "relative w-full text-left bg-white/[0.03] border border-white/10 rounded-lg px-4 py-3.5 lg:px-5 lg:py-4 text-[14px] lg:text-[15px] text-white transition-all";
             if (showCorrect) cls += " border-[#22C55E]/60 bg-[#22C55E]/[0.08]";
             else if (showWrong) cls += " border-orange/60 bg-orange/[0.08]";
             else if (!hasAnswered) cls += " hover:bg-white/[0.06] hover:border-white/25 cursor-pointer";
             else cls += " opacity-60";
 
             return (
-              <button key={i} onClick={() => select(i)} disabled={hasAnswered} className={cls}>
+              <div
+                key={i}
+                role="button"
+                tabIndex={hasAnswered ? -1 : 0}
+                aria-disabled={hasAnswered}
+                onClick={() => {
+                  if (!hasAnswered) select(i);
+                }}
+                onKeyDown={(e) => {
+                  if (!hasAnswered && (e.key === "Enter" || e.key === " ")) {
+                    e.preventDefault();
+                    select(i);
+                  }
+                }}
+                className={cls}
+              >
                 <span className="flex items-center gap-3">
                   <span
                     className={`shrink-0 w-6 h-6 rounded-full grid place-items-center text-[12px] font-medium transition-colors ${
@@ -155,45 +181,110 @@ export function Quiz({ questions, mode, topic }: QuizProps) {
                     </EditableText>
                   </span>
                 </span>
-              </button>
+              </div>
             );
           })}
         </div>
 
-        {hasAnswered && (
-          <div className="relative mt-6 flex justify-end">
+        {mode === "topic" ? (
+          <div className="relative mt-6 flex items-center justify-between gap-3">
             <button
-              onClick={next}
-              className="inline-flex items-center gap-2 bg-orange text-white px-6 py-3 rounded-lg text-[13.5px] font-medium hover:bg-[#EA670F] hover:translate-x-0.5 transition-all"
+              type="button"
+              onClick={() => index > 0 && setIndex(index - 1)}
+              disabled={index === 0}
+              aria-label={t("tickets.quiz.prev")}
+              className="inline-flex items-center gap-2 bg-white/[0.04] hover:bg-white/[0.08] border border-white/15 hover:border-white/30 text-white px-4 py-2.5 rounded-lg text-[13px] font-medium transition-all disabled:opacity-30 disabled:pointer-events-none"
             >
-              {index < questions.length - 1 ? t("tickets.quiz.next") : t("tickets.quiz.finish")}
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
-                <path d="M5 12h14M13 6l6 6-6 6" />
+                <path d="M19 12H5M11 6l-6 6 6 6" />
               </svg>
+              {t("tickets.quiz.prev")}
             </button>
+            {hasAnswered ? (
+              <button
+                type="button"
+                onClick={next}
+                className="inline-flex items-center gap-2 bg-orange text-white px-6 py-3 rounded-lg text-[13.5px] font-medium hover:bg-[#EA670F] hover:translate-x-0.5 transition-all"
+              >
+                {index < questions.length - 1 ? t("tickets.quiz.next") : t("tickets.quiz.finish")}
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
+                  <path d="M5 12h14M13 6l6 6-6 6" />
+                </svg>
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={() => index < questions.length - 1 && setIndex(index + 1)}
+                disabled={index >= questions.length - 1}
+                aria-label={t("tickets.quiz.next")}
+                className="inline-flex items-center gap-2 bg-white/[0.04] hover:bg-white/[0.08] border border-white/15 hover:border-white/30 text-white px-4 py-2.5 rounded-lg text-[13px] font-medium transition-all disabled:opacity-30 disabled:pointer-events-none"
+              >
+                {t("tickets.quiz.next")}
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
+                  <path d="M5 12h14M13 6l6 6-6 6" />
+                </svg>
+              </button>
+            )}
           </div>
+        ) : (
+          hasAnswered && (
+            <div className="relative mt-6 flex justify-end">
+              <button
+                onClick={next}
+                className="inline-flex items-center gap-2 bg-orange text-white px-6 py-3 rounded-lg text-[13.5px] font-medium hover:bg-[#EA670F] hover:translate-x-0.5 transition-all"
+              >
+                {index < questions.length - 1 ? t("tickets.quiz.next") : t("tickets.quiz.finish")}
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
+                  <path d="M5 12h14M13 6l6 6-6 6" />
+                </svg>
+              </button>
+            </div>
+          )
         )}
       </article>
     </div>
   );
 }
 
-function ProgressBar({ index, total }: { index: number; total: number }) {
+function ProgressBar({
+  index,
+  total,
+  correct,
+  answered,
+}: {
+  index: number;
+  total: number;
+  correct?: number;
+  answered?: number;
+}) {
   const { t } = useT();
-  const answered = index;
-  const pct = (answered / total) * 100;
+  const reachedPct = (index / total) * 100;
+  const answeredVal = answered ?? index;
   return (
     <div className="bg-white/[0.04] border border-white/10 rounded-lg p-4">
-      <div className="flex items-center justify-between text-[11.5px] text-muted-on-navy mb-2 tracking-[0.06em]">
+      <div className="flex items-center justify-between gap-3 text-[11.5px] text-muted-on-navy mb-2 tracking-[0.06em] flex-wrap">
         <span>{t("tickets.quiz.progress")}</span>
-        <span>
-          {answered} / {total}
-        </span>
+        <div className="flex items-center gap-3 tabular-nums">
+          {correct !== undefined && (
+            <>
+              <span className="text-[#22C55E]">
+                ✓ {correct}
+              </span>
+              <span className="text-orange-soft">
+                ✗ {answeredVal - correct}
+              </span>
+              <span className="text-muted-on-navy/60">·</span>
+            </>
+          )}
+          <span>
+            {index} / {total}
+          </span>
+        </div>
       </div>
       <div className="h-1 bg-white/10 rounded-full overflow-hidden">
         <div
           className="h-full bg-orange transition-all duration-500 ease-out"
-          style={{ width: `${pct}%` }}
+          style={{ width: `${reachedPct}%` }}
         />
       </div>
     </div>
