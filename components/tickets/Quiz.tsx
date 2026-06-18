@@ -91,7 +91,7 @@ export function Quiz({ questions, mode, topic }: QuizProps) {
 
       <article
         key={current.id}
-        className="relative bg-white/[0.04] border border-white/15 border-l-[3px] border-l-orange rounded-2xl p-6 sm:p-8 lg:p-10 lg:max-w-[1080px] lg:mx-auto overflow-hidden animate-card-in"
+        className="relative bg-white/[0.04] border border-white/15 border-l-[3px] border-l-orange rounded-2xl p-6 sm:p-8 lg:p-12 lg:max-w-[1280px] lg:mx-auto overflow-hidden animate-card-in"
       >
         <div className="absolute -right-12 -top-12 w-56 h-56 bg-orange/[0.10] rounded-full blur-[80px] pointer-events-none" aria-hidden />
 
@@ -107,22 +107,22 @@ export function Quiz({ questions, mode, topic }: QuizProps) {
         </div>
 
         {current.image && (
-          <div className="relative mb-5 rounded-xl overflow-hidden border border-white/10 bg-[#0F1430]">
+          <div className="relative mb-5 lg:mb-7 rounded-xl overflow-hidden border border-white/10 bg-[#0F1430]">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={current.image}
               alt={t("tickets.quiz.image.alt")}
-              className="w-full max-h-[280px] object-contain"
+              className="w-full max-h-[280px] lg:max-h-[360px] object-contain"
             />
           </div>
         )}
-        <h2 className="relative text-[18px] sm:text-[20px] lg:text-[22px] font-medium text-white leading-snug mb-6 lg:mb-8">
+        <h2 className="relative text-[18px] sm:text-[20px] lg:text-[24px] font-medium text-white leading-snug mb-6 lg:mb-9">
           <EditableText storageKey={`tickets.q.${current.id}.text.${locale}`} multiline>
             {pick(current.text, locale)}
           </EditableText>
         </h2>
 
-        <div className="relative space-y-2.5">
+        <div className="relative space-y-2.5 lg:space-y-0 lg:grid lg:grid-cols-2 lg:gap-4">
           {current.options.map((opt, i) => {
             const isSelected = currentAnswer === i;
             const isCorrect = i === current.correctIndex;
