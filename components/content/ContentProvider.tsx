@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useState } from "react";
+import { createContext, useContext, useEffect, useState } from "react";
 
 type Ctx = {
   overrides: Record<string, string>;
@@ -28,6 +28,9 @@ export function ContentProvider({
   canEdit: boolean;
 }) {
   const [overrides, setOverrides] = useState(initial);
+  useEffect(() => {
+    setOverrides(initial);
+  }, [initial]);
   function setLocalOverride(key: string, value: string | null) {
     setOverrides((prev) => {
       const next = { ...prev };
