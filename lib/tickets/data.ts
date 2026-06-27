@@ -10761,3 +10761,10 @@ export function getRandomQuestions(count: number): Question[] {
   const shuffled = [...questions].sort(() => Math.random() - 0.5);
   return shuffled.slice(0, Math.min(count, questions.length));
 }
+
+export function getRandomQuestionsByTopics(topicIds: string[], count: number): Question[] {
+  const set = new Set(topicIds);
+  const pool = questions.filter((q) => set.has(q.topicId));
+  const shuffled = [...pool].sort(() => Math.random() - 0.5);
+  return shuffled.slice(0, Math.min(count, pool.length));
+}

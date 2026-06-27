@@ -74,11 +74,27 @@ export function Quiz({ questions, mode, topic }: QuizProps) {
     }
   }
 
+  function gotoNextUnanswered() {
+    const n = questions.length;
+    for (let step = 1; step <= n; step++) {
+      const j = (index + step) % n;
+      if (answers[j] === null) {
+        setIndex(j);
+        return;
+      }
+    }
+    setFinished(true);
+  }
+
   const correctCount = answers.reduce<number>((acc, a, i) => {
     if (a !== null && a === questions[i].correctIndex) return acc + 1;
     return acc;
   }, 0);
   const answeredCount = answers.filter((a) => a !== null).length;
+  const unansweredCount = questions.length - answeredCount;
+  const hasUnansweredElsewhere =
+    mode === "exam" &&
+    answers.some((a, i) => i !== index && a === null);
 
   return (
     <div className="space-y-6">
@@ -112,7 +128,7 @@ export function Quiz({ questions, mode, topic }: QuizProps) {
             <img
               src={current.image}
               alt={t("tickets.quiz.image.alt")}
-              className="w-full max-h-[280px] lg:max-h-[340px] object-contain"
+              className="block w-full h-auto"
             />
           </div>
         )}
@@ -175,7 +191,7 @@ export function Quiz({ questions, mode, topic }: QuizProps) {
                         <path d="M6 6l12 12M6 18L18 6" />
                       </svg>
                     ) : (
-                      String.fromCharCode(65 + i)
+                      i + 1
                     )}
                   </span>
                   <span>
@@ -230,19 +246,44 @@ export function Quiz({ questions, mode, topic }: QuizProps) {
             )}
           </div>
         ) : (
-          hasAnswered && (
-            <div className="relative mt-6 flex justify-end">
+          <div className="relative mt-6 flex items-center justify-between gap-3 flex-wrap">
+            {mode === "exam" && !hasAnswered && hasUnansweredElsewhere ? (
               <button
-                onClick={next}
-                className="inline-flex items-center gap-2 bg-orange text-white px-6 py-3 rounded-lg text-[13.5px] font-medium hover:bg-[#EA670F] hover:translate-x-0.5 transition-all"
+                type="button"
+                onClick={gotoNextUnanswered}
+                className="inline-flex items-center gap-2 bg-white/[0.04] hover:bg-white/[0.08] border border-white/15 hover:border-white/30 text-white px-4 py-2.5 rounded-lg text-[13px] font-medium transition-all"
               >
-                {index < questions.length - 1 ? t("tickets.quiz.next") : t("tickets.quiz.finish")}
+                {t("tickets.quiz.skip")}
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
                   <path d="M5 12h14M13 6l6 6-6 6" />
                 </svg>
               </button>
-            </div>
-          )
+            ) : (
+              <span />
+            )}
+            {mode === "exam" && unansweredCount > 0 && unansweredCount < questions.length && (
+              <span className="text-[11.5px] text-muted-on-navy tabular-nums">
+                {t("tickets.quiz.skipped.remaining", { n: unansweredCount })}
+              </span>
+            )}
+            {hasAnswered && (
+              <button
+                onClick={mode === "exam" ? gotoNextUnanswered : next}
+                className="inline-flex items-center gap-2 bg-orange text-white px-6 py-3 rounded-lg text-[13.5px] font-medium hover:bg-[#EA670F] hover:translate-x-0.5 transition-all"
+              >
+                {mode === "exam"
+                  ? unansweredCount > 1
+                    ? t("tickets.quiz.next")
+                    : t("tickets.quiz.finish")
+                  : index < questions.length - 1
+                  ? t("tickets.quiz.next")
+                  : t("tickets.quiz.finish")}
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
+                  <path d="M5 12h14M13 6l6 6-6 6" />
+                </svg>
+              </button>
+            )}
+          </div>
         )}
       </article>
     </div>
@@ -261,8 +302,8 @@ function ProgressBar({
   answered?: number;
 }) {
   const { t } = useT();
-  const reachedPct = (index / total) * 100;
   const answeredVal = answered ?? index;
+  const reachedPct = ((answered ?? index) / total) * 100;
   return (
     <div className="bg-white/[0.04] border border-white/10 rounded-lg p-4">
       <div className="flex items-center justify-between gap-3 text-[11.5px] text-muted-on-navy mb-2 tracking-[0.06em] flex-wrap">
@@ -280,7 +321,7 @@ function ProgressBar({
             </>
           )}
           <span>
-            {index} / {total}
+            {answeredVal} / {total}
           </span>
         </div>
       </div>
@@ -294,7 +335,7 @@ function ProgressBar({
   );
 }
 
-function QuizResults({
+export function QuizResults({
   questions,
   answers,
   mode,
@@ -425,7 +466,7 @@ function QuizResults({
                     <div key={oi} className={cls}>
                       <span className="flex items-center gap-2.5">
                         <span className="text-[11px] text-muted-on-navy tabular-nums shrink-0">
-                          {String.fromCharCode(65 + oi)}.
+                          {oi + 1}.
                         </span>
                         <span className="flex-1">
                           <EditableText storageKey={`tickets.q.${q.id}.opt.${oi}.${locale}`} multiline>{pick(opt, locale)}</EditableText>

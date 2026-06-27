@@ -1,11 +1,13 @@
 "use client";
 
-import { useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useMemo } from "react";
 import { Quiz } from "./Quiz";
+import { PaginatedQuiz } from "./PaginatedQuiz";
+import { ExamTopicPicker } from "./ExamTopicPicker";
 import {
   getQuestionsByTopic,
-  getRandomQuestions,
+  getRandomQuestionsByTopics,
   questions as allQuestions,
   topics,
   type Question,
@@ -17,30 +19,45 @@ type QuizMode = "exam" | "topic" | "mistakes";
 
 export function QuizContainer() {
   const { t } = useT();
+  const router = useRouter();
   const params = useSearchParams();
   const mode = (params.get("mode") || "exam") as QuizMode;
   const topicId = params.get("topic");
+  const topicsParam = params.get("topics");
 
-  const [data, setData] = useState<{ questions: Question[]; topic?: ReturnType<typeof topics.find> } | null>(null);
-
-  useEffect(() => {
+  const data = useMemo<{ questions: Question[]; topic?: ReturnType<typeof topics.find> } | null>(() => {
     if (mode === "topic" && topicId) {
       const topic = topics.find((t) => t.id === topicId);
-      setData({ questions: getQuestionsByTopic(topicId), topic });
-      return;
+      return { questions: getQuestionsByTopic(topicId), topic };
     }
     if (mode === "mistakes") {
       const ids = new Set(getMistakeIds());
       const qs = allQuestions.filter((q) => ids.has(q.id));
       const shuffled = [...qs].sort(() => Math.random() - 0.5);
-      setData({ questions: shuffled, topic: undefined });
-      return;
+      return { questions: shuffled, topic: undefined };
     }
-    setData({ questions: getRandomQuestions(30), topic: undefined });
-  }, [mode, topicId]);
+    if (mode === "exam") {
+      if (!topicsParam) return null;
+      const ids = topicsParam.split(",").filter(Boolean);
+      if (ids.length === 0) return null;
+      return { questions: getRandomQuestionsByTopics(ids, 30), topic: undefined };
+    }
+    return null;
+  }, [mode, topicId, topicsParam]);
+
+  if (mode === "exam" && !topicsParam) {
+    return (
+      <ExamTopicPicker
+        onStart={(ids) => router.push(`/tickets/quiz?mode=exam&topics=${ids.join(",")}`)}
+      />
+    );
+  }
 
   if (!data) {
     return <div className="text-muted-on-navy text-center py-20">{t("tickets.quiz.loading")}</div>;
+  }
+  if (mode === "topic" && data.questions.length > 0) {
+    return <PaginatedQuiz questions={data.questions} mode={mode} topic={data.topic} />;
   }
   return <Quiz questions={data.questions} mode={mode} topic={data.topic} />;
 }
